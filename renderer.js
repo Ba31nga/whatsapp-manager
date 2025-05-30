@@ -87,6 +87,33 @@ function debounce(fn, delay) {
   };
 }
 
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+
+  toast.style.cssText = `
+    background-color: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3'};
+    color: white;
+    padding: 12px 20px;
+    margin-top: 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    font-size: 16px;
+    animation: fadein 0.3s, fadeout 0.5s 4.5s;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+  `;
+
+  const container = document.getElementById('toast-container');
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 5000);
+}
+
+
 // Parse pasted Excel text into array of objects
 function parseExcelText(text) {
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
@@ -157,12 +184,11 @@ function generatePreview(message, headers, firstRow) {
 }
 
 // Split array into specified number of chunks
-function chunkArray(array, chunks) {
-  const perChunk = Math.ceil(array.length / chunks);
-  const result = [];
-  for (let i = 0; i < chunks; i++) {
-    result.push(array.slice(i * perChunk, (i + 1) * perChunk));
-  }
+function chunkArray(arr, chunkCount) {
+  const result = Array.from({ length: chunkCount }, () => []);
+  arr.forEach((item, index) => {
+    result[index % chunkCount].push(item);
+  });
   return result;
 }
 
@@ -233,13 +259,13 @@ function updatePreview() {
 // Send messages button click handler
 sendMessagesBtn.addEventListener('click', async () => {
   if (!parsedData.length) {
-    alert('אנא הדבק טבלה חוקית בצד שמאל.');
+    showToast('אנא הדבק טבלה חוקית בצד שמאל.', 'error');
     return;
   }
 
   const messageTemplate = messageInput.value.trim();
   if (!messageTemplate) {
-    alert('אנא כתוב הודעה מותאמת אישית.');
+    showToast('אנא כתוב הודעה מותאמת אישית.', 'error');
     return;
   }
 
@@ -248,10 +274,11 @@ sendMessagesBtn.addEventListener('click', async () => {
 
   // Calculate delay based on average typing speed
   function calculateDelay(message) {
+    const randomFactor = 0.8 + Math.random() * 0.4
     const words = message.trim().split(/\s+/).length;
     const wpm = 40; // average words per minute
     const secondsPerWord = 60 / wpm;
-    return words * secondsPerWord * 1000; // delay in milliseconds
+    return words * secondsPerWord * 1000 * randomFactor; // delay in milliseconds
   }
 
   // Send messages sequentially per client with delay
@@ -286,9 +313,10 @@ sendMessagesBtn.addEventListener('click', async () => {
         return sendMessagesSequentially(clientId, chunkData).then(() => `לקוח ${clientId}: סיום שליחה.`);
       })
     );
-    alert(results.join('\n'));
+    showToast(results.join(' | '), 'success');
   } catch (err) {
-    alert('שגיאה בשליחת ההודעות: ' + err.message);
+    showToast('שגיאה בשליחת ההודעות: ' + err.message, 'error');
+
   }
 });
 
