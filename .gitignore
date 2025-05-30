@@ -8,6 +8,21 @@ build/
 # WhatsApp session data (whatsapp-web.js)
 session/
 .session/
+.wwebjs_auth
+.wwebjs_cache
+*.session.json
+*.session
+
+# WhatsApp-web cache, tokens, logs
+*.db
+*.db-shm
+*.db-wal
+*.auth_info.json
+tokens/
+tokens.json
+whatsapp-cache/
+whatsapp-data/
+cache/
 
 # Logs
 logs/

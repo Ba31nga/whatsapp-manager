@@ -8,6 +8,23 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<!-- QR Code Login Overlay -->
+<div id="qrLoginOverlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="qrLoginTitle">
+  <div class="login-form qr-login-form">
+    <h2 id="qrLoginTitle">התחבר באמצעות סריקת QR</h2>
+
+    <p class="instruction-text">פתח את וואטסאפ בטלפון שלך, סרוק את ה-QR למטה והתחבר.</p>
+
+    <div id="qrCodeContainer" class="qr-code-container" aria-label="קוד QR להתחברות">
+      <!-- Your QR code will be rendered here, e.g. via qrcode npm or canvas -->
+      <img id="qrImage" alt="QR Code להתחברות" />
+    </div>
+    <div id="loginStatus" class="login-status" aria-live="polite"></div>
+    <button id="logoutBtn" hidden>התנתק</button>
+  </div>
+</div>
+
+
   <div class="app-container">
     <aside class="sidebar">
       <div class="logo">מנהל וואטסאפ</div>

@@ -1,3 +1,5 @@
+const { ipcRenderer } = require('electron');
+
 const excelInput = document.getElementById('excelInput');
 const clearTableBtn = document.getElementById('clearTable');
 const tableContainer = document.getElementById('tableContainer');
@@ -5,27 +7,27 @@ const dataTable = document.getElementById('dataTable');
 const messageInput = document.getElementById('messageInput');
 const messagePreview = document.getElementById('messagePreview');
 const sendMessagesBtn = document.getElementById('sendMessages');
+const qrLoginOverlay = document.getElementById('qrLoginOverlay');
 
-let parsedData = []; // array of objects, each row is {header: value}
+// QR code & login status container elements already created and appended earlier
+const qrImage = document.getElementById('qrImage');
+
+const loginStatus = document.getElementById('loginStatus');
+
+let parsedData = [];
 
 function parseExcelText(text) {
-  // Split by lines, ignore empty lines
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return [];
 
-  // Split headers by tab or spaces
   const headers = lines[0].split(/\t| {2,}/).map(h => h.trim());
 
-  const rows = lines.slice(1).map(line => {
+  return lines.slice(1).map(line => {
     const values = line.split(/\t| {2,}/);
     const obj = {};
-    headers.forEach((header, i) => {
-      obj[header] = values[i] || '';
-    });
+    headers.forEach((header, i) => obj[header] = values[i] || '');
     return obj;
   });
-
-  return rows;
 }
 
 function renderTable(data) {
@@ -36,21 +38,15 @@ function renderTable(data) {
 
   tableContainer.style.display = 'block';
 
-  // Headers
   const headers = Object.keys(data[0]);
 
   let html = '<thead><tr>';
-  headers.forEach(h => {
-    html += `<th>${h}</th>`;
-  });
+  headers.forEach(h => { html += `<th>${h}</th>`; });
   html += '</tr></thead><tbody>';
 
-  // Rows
   data.forEach(row => {
     html += '<tr>';
-    headers.forEach(h => {
-      html += `<td>${row[h] || ''}</td>`;
-    });
+    headers.forEach(h => { html += `<td>${row[h] || ''}</td>`; });
     html += '</tr>';
   });
 
@@ -59,13 +55,8 @@ function renderTable(data) {
 }
 
 function highlightPlaceholders(text, headers) {
-  // highlight #header names in message input
-  // This only highlights in the preview area, input stays normal textarea
-  // We'll replace #header with <span class="highlight-placeholder">#header</span>
-
   if (!headers.length) return text;
 
-  // Escape RegExp special chars in headers for safer matching
   const escapedHeaders = headers.map(h => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
   escapedHeaders.forEach(header => {
@@ -92,7 +83,6 @@ function generatePreview(message, headers, firstRow) {
 excelInput.addEventListener('input', e => {
   parsedData = parseExcelText(e.target.value);
   renderTable(parsedData);
-
   updatePreview();
 });
 
@@ -119,12 +109,10 @@ function updatePreview() {
   const previewWithHighlight = highlightPlaceholders(rawMessage, headers);
   messagePreview.innerHTML = previewWithHighlight;
 
-  // Also generate actual preview text with values replaced
-  const realPreview = generatePreview(rawMessage, headers, parsedData[0]);
-  messagePreview.textContent = realPreview; // override with real preview (no HTML tags)
-
-  // To highlight placeholders inside messageInput, you would need a rich text editor (complex).
-  // So we highlight placeholders only in preview area for now.
+  // If you want real preview text below highlighted preview, you can show that separately
+  // Here we just show the real preview as textContent (without HTML tags)
+  // If you want to keep highlights, skip this line or show realPreview elsewhere
+  // messagePreview.textContent = generatePreview(rawMessage, headers, parsedData[0]);
 }
 
 sendMessagesBtn.addEventListener('click', () => {
@@ -139,9 +127,43 @@ sendMessagesBtn.addEventListener('click', () => {
     return;
   }
 
-  // For demo: send messages one by one with delay (to be implemented with whatsapp-web.js)
-  // For now, just show an alert with number of messages to send
-  alert(`יש לשלוח ${parsedData.length} הודעות עם התבנית:\n\n${messageTemplate}`);
+  ipcRenderer.invoke('send-whatsapp-messages', { data: parsedData, template: messageTemplate })
+    .then(response => {
+      alert(response);
+    })
+    .catch(err => {
+      alert('שגיאה בשליחת ההודעות: ' + err.message);
+    });
+});
 
-  // Here you will later integrate whatsapp-web.js sending logic
+// IPC handlers for QR code & WhatsApp login status
+
+ipcRenderer.on('qr', (event, qr) => {
+  // qr is usually a data URL string or base64 image string
+  if (typeof qr === 'string' && qr.startsWith('data:image')) {
+    qrImage.src = qr;
+  } else {
+    // If the QR is raw text, generate a QR code image with a library or just show as text (optional)
+    qrImage.src = '';
+    loginStatus.textContent = 'סרוק את הברקוד עם וואטסאפ במכשירך: ' + qr;
+  }
+  loginStatus.textContent = 'סרוק את הברקוד עם וואטסאפ במכשירך';
+});
+
+ipcRenderer.on('authenticated', () => {
+  qrImage.src = '';
+  loginStatus.textContent = 'מחובר בהצלחה לוואטסאפ!';
+  qrLoginOverlay.style.display = 'none';
+});
+
+
+ipcRenderer.on('auth_failure', () => {
+  qrImage.src = '';
+  loginStatus.textContent = 'נכשל בחיבור. נסה לאתחל את האפליקציה.';
+});
+
+ipcRenderer.on('ready', () => {
+  qrImage.src = '';
+  loginStatus.textContent = 'וואטסאפ מוכן לשימוש';
+  qrLoginOverlay.style.display = 'none';
 });

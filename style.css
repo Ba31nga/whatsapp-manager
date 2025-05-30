@@ -254,3 +254,87 @@ th {
 .message-preview {
   user-select: text;
 }
+
+/* Login Overlay reused styles */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 45, 49, 0.95);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  direction: rtl;
+}
+
+.qr-login-form {
+  background: #313338;
+  padding: 30px 40px;
+  border-radius: 12px;
+  width: 340px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+.qr-login-form h2 {
+  margin-bottom: 16px;
+  color: #4ea1ff;
+  font-weight: 700;
+  text-align: center;
+}
+
+.instruction-text {
+  color: #aaa;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.qr-code-container {
+  width: 250px;
+  height: 250px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 12px #00000060;
+  margin-bottom: 20px;
+}
+
+#qrCanvas {
+  width: 230px;
+  height: 230px;
+}
+
+/* Logout button */
+#logoutBtn {
+  background-color: #4ea1ff;
+  color: white;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.25s ease;
+}
+
+#logoutBtn:hover,
+#logoutBtn:focus {
+  background-color: #357acc;
+  outline: none;
+}
+
+/* Blur background app while login visible */
+body.login-active .app-container {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
+
