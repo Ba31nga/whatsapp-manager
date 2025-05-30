@@ -72,6 +72,13 @@
         </svg>
         הודעות אוטומטיות
       </a>
+
+      <a href="#" id="menu-log" tabindex="0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="m3 3h18v2h-18v-2zm0 4h18v2h-18v-2zm0 4h12v2h-12v-2zm0 4h12v2h-12v-2zm0 4h18v2h-18v-2z" fill="currentColor"/>
+        </svg>
+        יומן הודעות שנשלחו
+      </a>
     </nav>
   </aside>
 
@@ -108,6 +115,24 @@
 
     </section>
   </main>
+
+  <main class="main-content" id="log-content" style="display: none;">
+  <h1>יומן הודעות</h1>
+  <p>רשימת כל משלוחי ההודעות שבוצעו:</p>
+
+  <table id="logTable" class="log-table">
+    <thead>
+      <tr>
+        <th>תאריך</th>
+        <th>מספר הודעות</th>
+        <th>סוג</th>
+        <th>סטטוס</th>
+        <th>פרטים</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
 
 </div>
 

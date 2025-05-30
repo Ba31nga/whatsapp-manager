@@ -7,6 +7,43 @@ const messageInput = document.getElementById('messageInput');
 const messagePreview = document.getElementById('messagePreview');
 const sendMessagesBtn = document.getElementById('sendMessages');
 const qrLoginOverlay = document.getElementById('qrLoginOverlay');
+const menuAutomatedMessages = document.getElementById('menu-automated-messages');
+const menuLog = document.getElementById('menu-log');
+const mainContent = document.getElementById('main-content');
+const logContent = document.getElementById('log-content');
+
+function showAutomatedMessages() {
+  menuAutomatedMessages.classList.add('active');
+  menuLog.classList.remove('active');
+  mainContent.style.display = 'block';
+  logContent.style.display = 'none';
+}
+
+function showLog() {
+  menuLog.classList.add('active');
+  menuAutomatedMessages.classList.remove('active');
+  mainContent.style.display = 'none';
+  logContent.style.display = 'block';
+}
+
+menuAutomatedMessages.addEventListener('click', e => {
+  e.preventDefault();
+  showAutomatedMessages();
+});
+
+menuLog.addEventListener('click', e => {
+  e.preventDefault();
+  showLog();
+});
+
+function saveLogEntry(logEntry) {
+  // מקבל פריט חדש, שומר אותו במערך בלוקלסטורג'
+  const logs = JSON.parse(localStorage.getItem('sentLogs')) || [];
+  logs.push(logEntry);
+  localStorage.setItem('sentLogs', JSON.stringify(logs));
+}
+
+
 
 // Map client IDs to their QR image and login status elements
 const clients = {
