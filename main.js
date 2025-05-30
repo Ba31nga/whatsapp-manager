@@ -1,49 +1,35 @@
+// main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const fs = require('fs');
+const backend = require('./backend/server');
 
-// Optional: Create logs folder if not exists
-const logsDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
-}
+let mainWindow;
 
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, 'js', 'preload.js'), // for secure ipcRenderer use
-      nodeIntegration: true, // if needed, otherwise better to use preload
-      contextIsolation: false,
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
     },
-    icon: path.join(__dirname, 'assets', 'icon.png'), // Optional icon
-    autoHideMenuBar: true,
   });
 
-  win.loadFile('index.html');
-
-  // Optional: Open DevTools
-  // win.webContents.openDevTools();
+  mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }
 
-// Electron lifecycle
 app.whenReady().then(() => {
   createWindow();
 
-  app.on('activate', () => {
+  // Start the backend server and pass ipcMain and mainWindow references
+  backend.startBackend(ipcMain, mainWindow);
+
+  app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
-});
-
-// Optional: IPC handlers (e.g., for logs or Excel access)
-ipcMain.handle('log-json', async (_event, logData) => {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const filename = path.join(logsDir, `log-${timestamp}.json`);
-  fs.writeFileSync(filename, JSON.stringify(logData, null, 2));
-  return { success: true, filename };
 });
