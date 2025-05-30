@@ -129,6 +129,8 @@ ipcMain.handle('send-whatsapp-messages', async (event, { clientId, data, templat
       // normalize israeli phone number
       if (phone.startsWith('0')) {
         phone = '972' + phone.slice(1);
+      } else if (phone.startsWith('5')) {
+        phone = '972' + phone;
       }
 
       const chatId = phone + '@c.us';

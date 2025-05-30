@@ -12,6 +12,7 @@ const menuLog = document.getElementById('menu-log');
 const mainContent = document.getElementById('main-content');
 const logContent = document.getElementById('log-content');
 
+
 function showAutomatedMessages() {
   menuAutomatedMessages.classList.add('active');
   menuLog.classList.remove('active');
@@ -36,12 +37,6 @@ menuLog.addEventListener('click', e => {
   showLog();
 });
 
-function saveLogEntry(logEntry) {
-  // מקבל פריט חדש, שומר אותו במערך בלוקלסטורג'
-  const logs = JSON.parse(localStorage.getItem('sentLogs')) || [];
-  logs.push(logEntry);
-  localStorage.setItem('sentLogs', JSON.stringify(logs));
-}
 
 
 
@@ -318,27 +313,33 @@ function logEventOnce(eventName, clientId) {
 
 // Handle 'qr' event - show QR code and spinner
 ipcRenderer.on('qr', (event, payload) => {
-  if (!payload || typeof payload !== 'object') return;
-
   const client = clients[payload.clientId];
   if (!client) return;
 
   client.loggedIn = false;
-
   client.qrImage.style.display = 'block';
   client.qrImage.src = payload.qrDataUrl;
-
   client.loginStatus.textContent = `Agent ${payload.clientId}`;
 
   client.spinner.style.display = 'block';
   client.checkmark.style.display = 'none';
 
+  let qrLoaded = false;
+  const timeout = setTimeout(() => {
+    if (!qrLoaded) {
+      client.spinner.style.display = 'none'; // fallback hide spinner anyway
+    }
+  }, 10000); // 10 seconds fallback
+
   client.qrImage.onload = () => {
+    qrLoaded = true;
+    clearTimeout(timeout);
     client.spinner.style.display = 'none';
   };
 
   qrLoginOverlay.style.display = 'flex';
 });
+
 
 // Handle 'authenticated' event - hide QR, show checkmark, mark logged in
 ipcRenderer.on('authenticated', (event, clientId) => {
@@ -348,11 +349,17 @@ ipcRenderer.on('authenticated', (event, clientId) => {
   if (!client) return;
 
   client.loggedIn = true;
+
+  // Hide QR and spinner
   client.qrImage.style.display = 'none';
   client.spinner.style.display = 'none';
+
+  // Show checkmark
   client.checkmark.style.display = 'block';
+
   client.loginStatus.textContent = `Agent ${clientId} מחובר`;
 
+  // If all clients logged in, hide overlay
   updateOverlayVisibility();
 });
 
@@ -365,6 +372,7 @@ ipcRenderer.on('auth_failure', (event, clientId) => {
 
   client.loggedIn = false;
   client.loginStatus.textContent = `Agent ${clientId} כשלון התחברות - נסה שוב`;
+
   client.qrImage.style.display = 'none';
   client.spinner.style.display = 'none';
   client.checkmark.style.display = 'none';
