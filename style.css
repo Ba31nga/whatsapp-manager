@@ -338,3 +338,8 @@ body.login-active .app-container {
   user-select: none;
 }
 
+.highlight-placeholder {
+  color: white;
+  background-color: #007acc; /* or whatever highlight color you want */
+  font-weight: bold;
+}

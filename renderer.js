@@ -1,5 +1,4 @@
-const { ipcRenderer } = require('electron');
-
+const ipcRenderer = window.electron.ipcRenderer;
 const excelInput = document.getElementById('excelInput');
 const clearTableBtn = document.getElementById('clearTable');
 const tableContainer = document.getElementById('tableContainer');
@@ -135,6 +134,7 @@ sendMessagesBtn.addEventListener('click', () => {
       alert('שגיאה בשליחת ההודעות: ' + err.message);
     });
 });
+
 
 // IPC handlers for QR code & WhatsApp login status
 
