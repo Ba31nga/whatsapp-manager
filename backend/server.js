@@ -62,12 +62,12 @@ function startBackend(ipcMain, window) {
   ipcMain.handle('send-messages', async (event, messages) => {
     console.log('[Backend] IPC send-messages handler called with messages:', messages);
     try {
-      for (const msgBatch of messages) {
+      // Run all session message sends concurrently
+      const sessionPromises = messages.map(async (msgBatch) => {
         console.log(`[Backend] Sending messages for session ${msgBatch.sessionId} with ${msgBatch.data.length} entries`);
 
         const typingSpeed = msgBatch.typingSpeed || 'average';
 
-        // Send messages one by one to simulate typing
         for (const recipientData of msgBatch.data) {
           // Customize message template by replacing placeholders
           let customizedMessage = msgBatch.messageTemplate.replace(/#(\w+)/g, (_, key) => recipientData[key] || `#${key}`);
@@ -78,7 +78,11 @@ function startBackend(ipcMain, window) {
           // Send the message via SessionManager
           await sessionManager.sendSingleMessage(msgBatch.sessionId, recipientData, customizedMessage);
         }
-      }
+      });
+
+      // Await all sessions concurrently
+      await Promise.all(sessionPromises);
+
       console.log('[Backend] All messages sent successfully');
       return { success: true };
     } catch (err) {

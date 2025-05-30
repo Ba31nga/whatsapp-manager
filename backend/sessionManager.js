@@ -5,30 +5,34 @@ class SessionManager extends EventEmitter {
   constructor() {
     super();
     this.sessions = new Map();
+    this.readySessions = new Set();
     console.log('[SessionManager] Initializing sessions...');
     this.initSessions();
   }
 
   async initSessions() {
+    // Create all sessions concurrently
+    const createPromises = [];
     for (let i = 1; i <= 4; i++) {
       console.log(`[SessionManager] Creating session ${i}`);
-      await this.delay(2000);
-      this.createSession(i);
+      createPromises.push(this.createSession(i));
     }
+    await Promise.all(createPromises);
   }
 
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  async createSession(sessionId) {
+    if (this.sessions.has(sessionId)) {
+      console.log(`[SessionManager] Session ${sessionId} already exists, skipping creation.`);
+      return;
+    }
 
-  createSession(sessionId) {
     console.log(`[SessionManager] createSession called for session ${sessionId}`);
 
     const client = new Client({
       authStrategy: new LocalAuth({ clientId: `client${sessionId}` }),
       puppeteer: {
         headless: true,
-        args: ['--no-sandbox']
+        args: ['--no-sandbox'],
       },
     });
 
@@ -40,7 +44,9 @@ class SessionManager extends EventEmitter {
 
     client.on('ready', () => {
       console.log(`[SessionManager] Client ready for session ${sessionId}`);
+      this.readySessions.add(sessionId);
       this.emit('status', sessionId, 'מחובר');
+      this.emit('ready', sessionId);
     });
 
     client.on('authenticated', () => {
@@ -53,11 +59,18 @@ class SessionManager extends EventEmitter {
       this.emit('status', sessionId, 'כשל באימות');
     });
 
-    client.on('disconnected', (reason) => {
+    client.on('disconnected', async (reason) => {
       console.log(`[SessionManager] Disconnected session ${sessionId}, reason: ${reason}`);
       this.emit('status', sessionId, 'מנותק, מנסה להתחבר מחדש');
-      client.destroy();
-      this.createSession(sessionId);
+      this.readySessions.delete(sessionId);
+
+      // Destroy current client and recreate after short delay
+      await client.destroy();
+
+      // Remove old session and recreate new one
+      this.sessions.delete(sessionId);
+      // Recreate session (wait 3 seconds before retrying)
+      setTimeout(() => this.createSession(sessionId), 3000);
     });
 
     client.on('change_state', (state) => {
@@ -72,11 +85,40 @@ class SessionManager extends EventEmitter {
       console.log(`[SessionManager] Message received for session ${sessionId}:`, msg.body);
     });
 
-    client.initialize().catch((err) => {
+    try {
+      await client.initialize();
+      this.sessions.set(sessionId, client);
+    } catch (err) {
       console.error(`[SessionManager] Error initializing client for session ${sessionId}:`, err);
-    });
+    }
+  }
 
-    this.sessions.set(sessionId, client);
+  // Wait for all sessions to be ready
+  waitForAllReady(timeoutMs = 30000) {
+    return new Promise((resolve, reject) => {
+      const expectedSessions = 4;
+      const checkReady = () => {
+        if (this.readySessions.size === expectedSessions) {
+          resolve();
+        }
+      };
+
+      checkReady();
+
+      const interval = setInterval(() => {
+        checkReady();
+      }, 500);
+
+      // Timeout fallback
+      setTimeout(() => {
+        clearInterval(interval);
+        if (this.readySessions.size === expectedSessions) {
+          resolve();
+        } else {
+          reject(new Error('Timeout waiting for all sessions to be ready'));
+        }
+      }, timeoutMs);
+    });
   }
 
   normalizePhone(phoneRaw) {
@@ -99,8 +141,8 @@ class SessionManager extends EventEmitter {
 
   async sendMessages(sessionId, data, messageTemplate) {
     const client = this.sessions.get(sessionId);
-    if (!client || !client.info || !client.info.wid) {
-      throw new Error(`Session ${sessionId} לא מחובר`);
+    if (!client || !this.readySessions.has(sessionId)) {
+      throw new Error(`Session ${sessionId} לא מחובר או לא מוכן`);
     }
 
     console.log(`[SessionManager] Session ${sessionId} sending ${data.length} messages`);
@@ -146,10 +188,14 @@ class SessionManager extends EventEmitter {
 
   /**
    * Splits workload and sends messages concurrently across sessions.
+   * Waits for all sessions to be ready before sending.
    */
   async sendMessagesSplit(data, messageTemplate) {
     const totalSessions = 4;
     const chunkSize = Math.ceil(data.length / totalSessions);
+
+    // Wait for all sessions to be ready before sending
+    await this.waitForAllReady();
 
     const chunks = [];
     for (let i = 0; i < totalSessions; i++) {
@@ -172,8 +218,8 @@ class SessionManager extends EventEmitter {
 
   async sendSingleMessage(sessionId, recipientData, messageTemplate) {
     const client = this.sessions.get(sessionId);
-    if (!client || !client.info || !client.info.wid) {
-      throw new Error(`Session ${sessionId} לא מחובר`);
+    if (!client || !this.readySessions.has(sessionId)) {
+      throw new Error(`Session ${sessionId} לא מחובר או לא מוכן`);
     }
 
     const personalizedMessage = this.replacePlaceholders(messageTemplate, recipientData);
