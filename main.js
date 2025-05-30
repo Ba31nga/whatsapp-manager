@@ -116,8 +116,22 @@ ipcMain.handle('send-whatsapp-messages', async (event, { clientId, data, templat
       // find phone number in row
       let phone = null;
       for (const key of Object.keys(row)) {
-        if (key.toLowerCase().includes('phone')) {
-          phone = row[key].replace(/\D/g, '');
+        let raw = row[key]?.toString().trim();
+        if (!raw) continue;
+
+        let digits = raw.replace(/\D/g, '');
+
+        // Try to fix Israeli numbers that lost the leading zero
+        if (digits.length === 9 && digits.startsWith('5')) {
+          digits = '0' + digits; // restore missing '0'
+        }
+
+        if (
+          digits.length >= 9 &&
+          digits.length <= 15 &&
+          (/^05\d{8}$/.test(digits) || /^9725\d{8}$/.test(digits))
+        ) {
+          phone = digits;
           break;
         }
       }
