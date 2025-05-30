@@ -19,7 +19,7 @@ function createWindow() {
     },
   });
 
-  win.loadFile('renderer/index.html');
+  win.loadFile('index.html');
 }
 
 app.whenReady().then(createWindow);
