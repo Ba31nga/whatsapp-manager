@@ -4,6 +4,25 @@ const Logger = require('./logger');
 let sessionManager;
 let mainWindow;
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Typing speeds in chars per second for simulation
+const typingSpeeds = {
+  average: 5,         // ~5 chars per second (slow human typing)
+  'above-average': 8, // ~8 chars per second (fast human typing)
+};
+
+async function simulateTypingDelay(message, typingSpeed = 'average') {
+  const cps = typingSpeeds[typingSpeed] || typingSpeeds.average;
+  const delayMs = (message.length / cps) * 1000;
+  // Add a small random variance ±15% to seem more human-like
+  const variance = delayMs * 0.15;
+  const finalDelay = delayMs + (Math.random() * variance * 2 - variance);
+  await sleep(finalDelay);
+}
+
 function startBackend(ipcMain, window) {
   mainWindow = window;
   console.log('[Backend] Starting backend, initializing SessionManager...');
@@ -45,7 +64,20 @@ function startBackend(ipcMain, window) {
     try {
       for (const msgBatch of messages) {
         console.log(`[Backend] Sending messages for session ${msgBatch.sessionId} with ${msgBatch.data.length} entries`);
-        await sessionManager.sendMessages(msgBatch.sessionId, msgBatch.data, msgBatch.messageTemplate);
+
+        const typingSpeed = msgBatch.typingSpeed || 'average';
+
+        // Send messages one by one to simulate typing
+        for (const recipientData of msgBatch.data) {
+          // Customize message template by replacing placeholders
+          let customizedMessage = msgBatch.messageTemplate.replace(/#(\w+)/g, (_, key) => recipientData[key] || `#${key}`);
+
+          // Simulate typing delay before sending each message
+          await simulateTypingDelay(customizedMessage, typingSpeed);
+
+          // Send the message via SessionManager
+          await sessionManager.sendSingleMessage(msgBatch.sessionId, recipientData, customizedMessage);
+        }
       }
       console.log('[Backend] All messages sent successfully');
       return { success: true };

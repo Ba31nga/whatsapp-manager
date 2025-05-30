@@ -1,0 +1,80 @@
+[
+  {
+    "sessionId": 1,
+    "phone": "0586167764",
+    "message": "שלום נתנאל מכמלי",
+    "status": "נכשל",
+    "error": "Evaluation failed: Error: wid error: invalid wid\n    at new Error (<anonymous>:6:31)\n    at i (https://static.whatsapp.net/rsrc.php/v4/y0/r/amuzVZed4cN.js:77:180)\n    at new a (https://static.whatsapp.net/rsrc.php/v4/yW/r/S5RxJlYrLrS.js:326:1663)\n    at Object.o [as createWid] (https://static.whatsapp.net/rsrc.php/v4/yW/r/S5RxJlYrLrS.js:328:847)\n    at pptr://__puppeteer_evaluation_script__:2:53",
+    "timestamp": "2025-05-30T21:51:58.969Z"
+  },
+  {
+    "sessionId": 1,
+    "phone": "972586167764",
+    "message": "נתנאל מכמלי בדיקה",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T21:56:05.035Z"
+  },
+  {
+    "sessionId": 2,
+    "phone": "972586167764",
+    "message": "נתנאל מכמלי בדיקה",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T21:56:08.924Z"
+  },
+  {
+    "sessionId": 3,
+    "phone": "972586167764",
+    "message": "נתנאל מכמלי בדיקה",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T21:56:12.427Z"
+  },
+  {
+    "sessionId": 4,
+    "phone": "972586167764",
+    "message": "נתנאל מכמלי בדיקה",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T21:56:15.878Z"
+  },
+  {
+    "sessionId": 1,
+    "phone": "972586167764",
+    "message": "שלום 586167764",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T21:59:52.630Z"
+  },
+  {
+    "sessionId": 2,
+    "phone": "972586167764",
+    "message": "שלום 586167764",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T21:59:55.623Z"
+  },
+  {
+    "sessionId": 1,
+    "phone": "972586167764",
+    "message": "שלום נתנאל מכמלי",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T22:02:22.770Z"
+  },
+  {
+    "sessionId": 2,
+    "phone": "972586167764",
+    "message": "שלום נתנאל מכמלי",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T22:02:26.100Z"
+  },
+  {
+    "sessionId": 3,
+    "phone": "972586167764",
+    "message": "שלום נתנאל מכמלי",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T22:02:29.491Z"
+  },
+  {
+    "sessionId": 4,
+    "phone": "972586167764",
+    "message": "שלום נתנאל מכמלי",
+    "status": "נשלח",
+    "timestamp": "2025-05-30T22:02:32.256Z"
+  }
+]

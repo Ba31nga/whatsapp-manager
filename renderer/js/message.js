@@ -1,10 +1,12 @@
 import { getParsedData } from './excelParser.js';
+import { showToast } from './toastManager.js'; // use your external toast manager
 
 const messageInput = document.getElementById('messageInput');
 const messagePreview = document.getElementById('messagePreview');
 const sendBtn = document.getElementById('sendMessages');
 const excelInput = document.getElementById('excelInput');
 const dataTable = document.getElementById('dataTable');
+const typingSpeedSelect = document.getElementById('typingSpeedSelect'); // new: <select> in your HTML
 
 export function setupMessageInput() {
   messageInput.addEventListener('input', () => {
@@ -32,13 +34,16 @@ export function setupSendButton(api) {
   sendBtn.addEventListener('click', async () => {
     const parsedData = getParsedData();
     if (parsedData.length === 0) {
-      alert('נא להדביק טבלה תקינה.');
+      showToast('נא להדביק טבלה תקינה.', 'error');
       return;
     }
     if (!messageInput.value.trim()) {
-      alert('נא לכתוב הודעה מותאמת אישית.');
+      showToast('נא לכתוב הודעה מותאמת אישית.', 'error');
       return;
     }
+
+    // Read typing speed from select, default to 'average'
+    const typingSpeed = typingSpeedSelect?.value || 'average';
 
     const messagesToSend = [];
     for (let sessionId = 1; sessionId <= 4; sessionId++) {
@@ -46,19 +51,20 @@ export function setupSendButton(api) {
         sessionId,
         data: parsedData,
         messageTemplate: messageInput.value.trim(),
+        typingSpeed, // pass typingSpeed here
       });
     }
 
     try {
       const result = await api.requestSendMessages(messagesToSend);
       if (result.success) {
-        alert('ההודעות נשלחו בהצלחה');
-        // Maybe clear inputs or trigger logs reload elsewhere
+        showToast('ההודעות נשלחו בהצלחה', 'success');
+        // Optionally clear inputs or reload logs elsewhere
       } else {
-        alert('שגיאה בשליחת ההודעות: ' + result.error);
+        showToast('שגיאה בשליחת ההודעות: ' + result.error, 'error');
       }
     } catch (err) {
-      alert('שגיאה: ' + err.message);
+      showToast('שגיאה: ' + err.message, 'error');
     }
   });
 }
@@ -70,5 +76,6 @@ export function setupClearButton() {
     dataTable.innerHTML = '';
     messageInput.value = '';
     messagePreview.textContent = 'כתוב הודעה מותאמת אישית.';
+    showToast('הטבלה וההודעה נמחקו', 'info', 3000);
   });
 }

@@ -29,7 +29,6 @@ class SessionManager extends EventEmitter {
       puppeteer: {
         headless: true,
         args: ['--no-sandbox']
-        // ❌ Removed userDataDir
       },
     });
 
@@ -80,22 +79,54 @@ class SessionManager extends EventEmitter {
     this.sessions.set(sessionId, client);
   }
 
+  normalizePhone(phoneRaw) {
+    let phone = phoneRaw.replace(/\D/g, '');
+
+    if (!phone) return null;
+
+    if (phone.startsWith('0')) {
+      phone = '972' + phone.slice(1);
+    } else if (phone.startsWith('972')) {
+      // already in correct format
+    } else if (phone.length === 9) {
+      phone = '972' + phone;
+    } else if (phone.length < 9) {
+      return null; // invalid phone number
+    }
+
+    return phone;
+  }
+
   async sendMessages(sessionId, data, messageTemplate) {
     const client = this.sessions.get(sessionId);
     if (!client || !client.info || !client.info.wid) {
       throw new Error(`Session ${sessionId} לא מחובר`);
     }
 
+    console.log(`[SessionManager] Session ${sessionId} sending ${data.length} messages`);
+
     for (const row of data) {
       const personalizedMessage = this.replacePlaceholders(messageTemplate, row);
-      const phone = row.phone.replace(/\D/g, '');
-      const chatId = phone + '@c.us';
+      const normalizedPhone = this.normalizePhone(row.phone);
+      if (!normalizedPhone) {
+        this.emit('messageSent', {
+          sessionId,
+          phone: row.phone,
+          message: personalizedMessage,
+          status: 'נכשל',
+          error: 'מספר טלפון לא חוקי',
+          timestamp: new Date().toISOString(),
+        });
+        continue;
+      }
+
+      const chatId = normalizedPhone + '@c.us';
 
       try {
         await client.sendMessage(chatId, personalizedMessage);
         this.emit('messageSent', {
           sessionId,
-          phone,
+          phone: normalizedPhone,
           message: personalizedMessage,
           status: 'נשלח',
           timestamp: new Date().toISOString(),
@@ -103,13 +134,76 @@ class SessionManager extends EventEmitter {
       } catch (e) {
         this.emit('messageSent', {
           sessionId,
-          phone,
+          phone: normalizedPhone,
           message: personalizedMessage,
           status: 'נכשל',
           error: e.message,
           timestamp: new Date().toISOString(),
         });
       }
+    }
+  }
+
+  /**
+   * Splits workload and sends messages concurrently across sessions.
+   */
+  async sendMessagesSplit(data, messageTemplate) {
+    const totalSessions = 4;
+    const chunkSize = Math.ceil(data.length / totalSessions);
+
+    const chunks = [];
+    for (let i = 0; i < totalSessions; i++) {
+      chunks.push(data.slice(i * chunkSize, (i + 1) * chunkSize));
+    }
+
+    const sendPromises = [];
+
+    chunks.forEach((chunk, index) => {
+      const sessionId = index + 1;
+      if (chunk.length === 0) {
+        console.log(`[SessionManager] No data for session ${sessionId}, skipping send.`);
+        return; // skip empty chunks
+      }
+      sendPromises.push(this.sendMessages(sessionId, chunk, messageTemplate));
+    });
+
+    await Promise.all(sendPromises);
+  }
+
+  async sendSingleMessage(sessionId, recipientData, messageTemplate) {
+    const client = this.sessions.get(sessionId);
+    if (!client || !client.info || !client.info.wid) {
+      throw new Error(`Session ${sessionId} לא מחובר`);
+    }
+
+    const personalizedMessage = this.replacePlaceholders(messageTemplate, recipientData);
+    const normalizedPhone = this.normalizePhone(recipientData.phone || '');
+
+    if (!normalizedPhone) {
+      throw new Error('מספר טלפון לא חוקי בנתוני הנמען');
+    }
+
+    const chatId = normalizedPhone + '@c.us';
+
+    try {
+      await client.sendMessage(chatId, personalizedMessage);
+      this.emit('messageSent', {
+        sessionId,
+        phone: normalizedPhone,
+        message: personalizedMessage,
+        status: 'נשלח',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (e) {
+      this.emit('messageSent', {
+        sessionId,
+        phone: normalizedPhone,
+        message: personalizedMessage,
+        status: 'נכשל',
+        error: e.message,
+        timestamp: new Date().toISOString(),
+      });
+      throw e;
     }
   }
 
