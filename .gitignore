@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+
+# Electron build artifacts
+dist/
+build/
+
+# WhatsApp session data (whatsapp-web.js)
+session/
+.session/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS and editor settings
+.DS_Store
+Thumbs.db
+
+# VS Code settings
+.vscode/
+
+# Excel temp files (in case you open in Excel)
+~$*.xlsx
+~$*.xls

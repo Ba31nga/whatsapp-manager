@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מנהל וואטסאפ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">מנהל וואטסאפ</div>
+      <nav>
+        <a href="#" id="menu-automated-messages" class="active" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+            <path d="M2 2v20l4-4h16V2H2zm16 10h-8v-2h8v2zm0-4h-8V6h8v2z"/>
+          </svg>
+          הודעות אוטומטיות
+        </a>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="main-content">
+      <h1>הודעות אוטומטיות</h1>
+      <p>כאן תוכלו להגדיר ולשלוח הודעות אוטומטיות בוואטסאפ.</p>
+
+      <section class="container">
+        <section class="left-panel">
+          <label for="excelInput">הדבק כאן את הטבלה שהעתקת מ-Excel (או CSV):</label>
+          <textarea id="excelInput" placeholder="הדבק כאן טבלה עם עמודות, לדוגמה:&#10;phone	name"></textarea>
+          <button id="clearTable">נקה טבלה</button>
+
+          <div id="tableContainer" class="table-container" hidden>
+            <table id="dataTable" role="grid" aria-label="נתוני הטבלה"></table>
+          </div>
+        </section>
+
+        <section class="right-panel">
+          <label for="messageInput">הודעה מותאמת אישית (השתמש ב:#שם_העמודה):</label>
+          <textarea id="messageInput" placeholder="לדוגמה: שלום #name הציון שלך הוא #score"></textarea>
+
+          <div class="preview" aria-live="polite" aria-atomic="true">
+            <h3>תצוגה מקדימה:</h3>
+            <div id="messagePreview" class="message-preview">כתוב הודעה מותאמת אישית.</div>
+          </div>
+
+          <button id="sendMessages">שלח הודעות</button>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

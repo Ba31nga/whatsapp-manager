@@ -1,0 +1,30 @@
+{
+  "name": "whatsapp-manager",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env NODE_ENV=development electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ba31nga/whatsapp-manager.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ba31nga/whatsapp-manager/issues"
+  },
+  "homepage": "https://github.com/Ba31nga/whatsapp-manager#readme",
+  "description": "",
+  "dependencies": {
+    "electron": "^36.3.2",
+    "whatsapp-web.js": "^1.28.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron-reload": "^2.0.0-alpha.1"
+  }
+}

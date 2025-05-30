@@ -1,0 +1,256 @@
+/* Reset and base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #2b2d31;
+  color: #eee;
+  direction: rtl;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* App container: sidebar + main content */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: #1e1f22;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  color: white;
+  user-select: none;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.7);
+  overflow-y: auto;
+}
+
+.sidebar .logo {
+  font-weight: 700;
+  font-size: 1.6rem;
+  margin-bottom: 40px;
+  color: #4ea1ff;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #aaa;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  cursor: pointer;
+  user-select: none;
+  outline-offset: 2px;
+  outline-color: transparent;
+  direction: rtl;
+}
+
+.sidebar nav a svg {
+  fill: currentColor;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.sidebar nav a:hover,
+.sidebar nav a:focus,
+.sidebar nav a.active {
+  background-color: #4ea1ff;
+  color: white;
+  outline-color: #4ea1ff;
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+  background-color: #2b2d31;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  scrollbar-width: thin;
+  scrollbar-color: #4ea1ff transparent;
+}
+
+.main-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background-color: #4ea1ff;
+  border-radius: 5px;
+}
+
+.main-content h1 {
+  font-weight: 700;
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+  color: #4ea1ff;
+  user-select: none;
+}
+
+.main-content p {
+  font-weight: 500;
+  margin-bottom: 30px;
+  color: #bbb;
+}
+
+/* Container with left and right panels */
+.container {
+  display: flex;
+  gap: 25px;
+  flex: 1;
+  min-height: 0; /* important for flex children scroll */
+}
+
+/* Left & Right panels */
+.left-panel,
+.right-panel {
+  background: #313338;
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* important for children scroll */
+}
+
+/* Labels */
+.left-panel label,
+.right-panel label {
+  font-weight: 700;
+  color: #4ea1ff;
+  margin-bottom: 10px;
+  user-select: none;
+}
+
+/* Textareas */
+textarea {
+  flex-grow: 1;
+  resize: vertical;
+  min-height: 120px;
+  max-height: 300px;
+  padding: 12px 15px;
+  font-size: 1rem;
+  background: #1e1f22;
+  color: #eee;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  direction: rtl;
+  box-shadow: inset 0 0 6px #00000080;
+  transition: background-color 0.2s ease;
+  margin-bottom: 15px;
+}
+
+textarea:focus {
+  outline: 2px solid #4ea1ff;
+  background-color: #222327;
+}
+
+/* Buttons */
+button {
+  background: #4ea1ff;
+  border: none;
+  padding: 12px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+  align-self: flex-start;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+button:hover,
+button:focus {
+  background: #357acc;
+  outline: none;
+}
+
+/* Table container */
+.table-container {
+  overflow-y: auto;
+  max-height: 230px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #1e1f22;
+  margin-top: 10px;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+  user-select: none;
+}
+
+th, td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #444;
+  text-align: right;
+  font-weight: 500;
+}
+
+th {
+  background: #313338;
+  color: #4ea1ff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Placeholder highlights in message preview */
+.highlight-placeholder {
+  color: #4ea1ff;
+  font-weight: 700;
+}
+
+/* Preview box */
+.preview {
+  background: #222327;
+  border-radius: 10px;
+  padding: 18px 20px;
+  min-height: 140px;
+  color: #eee;
+  font-size: 1.1rem;
+  white-space: pre-wrap;
+  user-select: text;
+  box-shadow: inset 0 0 8px #000000a0;
+  margin-bottom: 15px;
+}
+
+.message-preview {
+  user-select: text;
+}
