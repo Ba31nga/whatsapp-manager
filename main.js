@@ -1,22 +1,27 @@
+// main.js
+
+// ----- imports -----
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 
+// ----- globals -----
 let win;
-let client;
+const clients = {}; // store 4 clients indexed by ID: 1,2,3,4
 
+// ----- development reload -----
 if (process.env.NODE_ENV === 'development') {
   require('electron-reload')(__dirname, {
     electron: require(`${__dirname}/node_modules/electron`),
   });
 }
 
+// ----- create main window -----
 function createWindow() {
   win = new BrowserWindow({
-    width: 800,
-    height: 700,
+    width: 1200,
+    height: 900,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -25,99 +30,120 @@ function createWindow() {
   });
 
   win.loadFile('index.html');
-  initWhatsappClient();
+
+  // wait until window is ready before initializing WhatsApp clients
+  win.webContents.once('did-finish-load', () => {
+    console.log("window finished loading");
+    initWhatsappClients();
+  });
 }
 
-function initWhatsappClient() {
-  client = new Client({
-    authStrategy: new LocalAuth({ clientId: "electron-whatsapp" }),
-    puppeteer: {
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    },
-  });
+// ----- send message to renderer helper -----
+function sendToRenderer(channel, data) {
+  if (win && win.webContents) {
+    win.webContents.send(channel, data);
+  } else {
+    console.warn(`cannot send to renderer; window not ready. channel: ${channel}`);
+  }
+}
 
-  client.on('qr', (qr) => {
-    // Convert QR to data URL and send to renderer
-    qrcode.toDataURL(qr, (err, url) => {
-      if (err) {
-        console.error('QR generate error:', err);
-        return;
-      }
-      win.webContents.send('qr', url);
-      win.webContents.send('loginStatus', 'סרוק את הברקוד עם וואטסאפ במכשירך');
+// ----- initialize whatsapp clients -----
+function initWhatsappClients() {
+  for (let i = 1; i <= 4; i++) {
+    const clientId = `electron-whatsapp-${i}`;
+    const client = new Client({
+      authStrategy: new LocalAuth({ clientId }),
+      puppeteer: {
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      },
     });
-  });
 
-  client.on('ready', () => {
-    console.log('WhatsApp client is ready!');
-    win.webContents.send('ready');
-    win.webContents.send('loginStatus', 'וואטסאפ מוכן לשימוש');
-  });
+    // listen for qr code event
+    client.on('qr', (qr) => {
+      qrcode.toDataURL(qr, (err, url) => {
+        if (err) {
+          console.error(`qr generate error client ${i}:`, err);
+          return;
+        }
+        sendToRenderer('qr', { clientId: i, qrDataUrl: url });
+        sendToRenderer('loginStatus', { clientId: i, status: 'סרוק את הברקוד עם וואטסאפ במכשירך' });
+      });
+    });
 
-  client.on('authenticated', () => {
-    console.log('WhatsApp client authenticated');
-    win.webContents.send('authenticated');
-    win.webContents.send('loginStatus', 'מחובר בהצלחה לוואטסאפ!');
-  });
+    // listen for client ready event
+    client.on('ready', () => {
+      console.log(`whatsapp client ${i} is ready!`);
+      sendToRenderer('ready', i);
+      sendToRenderer('loginStatus', { clientId: i, status: 'וואטסאפ מוכן לשימוש' });
+    });
 
-  client.on('auth_failure', (msg) => {
-    console.error('Auth failure:', msg);
-    win.webContents.send('auth_failure');
-    win.webContents.send('loginStatus', 'נכשל בחיבור. נסה לאתחל את האפליקציה.');
-  });
+    // listen for client authenticated event
+    client.on('authenticated', () => {
+      console.log(`whatsapp client ${i} authenticated`);
+      sendToRenderer('authenticated', i);
+      sendToRenderer('loginStatus', { clientId: i, status: 'מחובר בהצלחה לוואטסאפ!' });
+    });
 
-  client.initialize();
+    // listen for authentication failure
+    client.on('auth_failure', (msg) => {
+      console.error(`auth failure client ${i}:`, msg);
+      sendToRenderer('auth_failure', i);
+      sendToRenderer('loginStatus', { clientId: i, status: 'נכשל בחיבור. נסה לאתחל את האפליקציה.' });
+    });
+
+    client.initialize();
+    clients[i] = client;
+  }
 }
 
-// Listen for message sending from renderer
-ipcMain.handle('send-whatsapp-messages', async (event, { data, template }) => {
+// ----- ipc handler for sending whatsapp messages -----
+ipcMain.handle('send-whatsapp-messages', async (event, { clientId, data, template }) => {
+  const client = clients[clientId];
   if (!client || !client.info) {
-    return 'לא מחובר לוואטסאפ. אנא סרוק את הברקוד והתחבר.';
+    return `לקוח וואטסאפ ${clientId} לא מחובר. אנא סרוק את הברקוד והתחבר.`;
   }
 
   try {
     for (const row of data) {
-      // Replace placeholders in the template
       let message = template;
+      // replace placeholders with actual values
       for (const key in row) {
         const placeholder = new RegExp(`#${key}`, 'g');
         message = message.replace(placeholder, row[key]);
       }
 
-      // Validate phone number: try to extract from row.phone or row.Phone or first header starting with "phone"
+      // find phone number in row
       let phone = null;
       for (const key of Object.keys(row)) {
         if (key.toLowerCase().includes('phone')) {
-          phone = row[key].replace(/\D/g, ''); // keep only digits
+          phone = row[key].replace(/\D/g, '');
           break;
         }
       }
       if (!phone) {
-        console.warn('No phone number found in row:', row);
-        continue; // skip if no phone found
+        console.warn('no phone number found in row:', row);
+        continue;
       }
 
-      // WhatsApp requires phone with country code, no plus sign
+      // normalize israeli phone number
       if (phone.startsWith('0')) {
-        // Assuming local Israeli number, convert 0 prefix to 972 (you can adjust)
         phone = '972' + phone.slice(1);
       }
 
       const chatId = phone + '@c.us';
 
-      // Send message
       await client.sendMessage(chatId, message);
-      // Add small delay to avoid rate limits
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 1500));
     }
-    return `נשלחו ${data.length} הודעות בהצלחה!`;
+    return `נשלחו ${data.length} הודעות בהצלחה מלקוח ${clientId}!`;
   } catch (err) {
-    console.error('Error sending messages:', err);
+    console.error(`error sending messages from client ${clientId}:`, err);
     throw err;
   }
 });
 
+// ----- app lifecycle events -----
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {

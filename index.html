@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+  <!-- meta information and page setup -->
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,66 +9,110 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<!-- QR Code Login Overlay -->
+
+<!--
+  qr code login overlay section
+  purpose: allows user to login by scanning qr code with whatsapp app on phone
+  includes 4 qr codes, each with spinner, image, checkmark, and status text for accessibility
+-->
 <div id="qrLoginOverlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="qrLoginTitle">
   <div class="login-form qr-login-form">
     <h2 id="qrLoginTitle">התחבר באמצעות סריקת QR</h2>
-
     <p class="instruction-text">פתח את וואטסאפ בטלפון שלך, סרוק את ה-QR למטה והתחבר.</p>
 
-    <div id="qrCodeContainer" class="qr-code-container" aria-label="קוד QR להתחברות">
-      <!-- Your QR code will be rendered here, e.g. via qrcode npm or canvas -->
-      <img id="qrImage" alt="QR Code להתחברות" />
+    <div id="qrCodesContainer" class="qr-codes-container" aria-label="קודי QR להתחברות">
+      
+      <div class="qr-code-wrapper">
+        <div class="spinner"></div>
+        <img id="qrImage1" alt="QR Code 1 להתחברות" style="display:none;" />
+        <div class="checkmark" style="display:none;">✔️</div>
+        <div id="loginStatus1" class="login-status" aria-live="polite"></div>
+      </div>
+      
+      <div class="qr-code-wrapper">
+        <div class="spinner"></div>
+        <img id="qrImage2" alt="QR Code 2 להתחברות" style="display:none;" />
+        <div class="checkmark" style="display:none;">✔️</div>
+        <div id="loginStatus2" class="login-status" aria-live="polite"></div>
+      </div>
+      
+      <div class="qr-code-wrapper">
+        <div class="spinner"></div>
+        <img id="qrImage3" alt="QR Code 3 להתחברות" style="display:none;" />
+        <div class="checkmark" style="display:none;">✔️</div>
+        <div id="loginStatus3" class="login-status" aria-live="polite"></div>
+      </div>
+      
+      <div class="qr-code-wrapper">
+        <div class="spinner"></div>
+        <img id="qrImage4" alt="QR Code 4 להתחברות" style="display:none;" />
+        <div class="checkmark" style="display:none;">✔️</div>
+        <div id="loginStatus4" class="login-status" aria-live="polite"></div>
+      </div>
+      
     </div>
-    <div id="loginStatus" class="login-status" aria-live="polite"></div>
-    <button id="logoutBtn" hidden>התנתק</button>
   </div>
 </div>
 
+<!--
+  main application container section
+  includes sidebar navigation and main content area for automated whatsapp messages
+-->
 
-  <div class="app-container">
-    <aside class="sidebar">
-      <div class="logo">מנהל וואטסאפ</div>
-      <nav>
-        <a href="#" id="menu-automated-messages" class="active" tabindex="0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-            <path d="M2 2v20l4-4h16V2H2zm16 10h-8v-2h8v2zm0-4h-8V6h8v2z"/>
-          </svg>
-          הודעות אוטומטיות
-        </a>
-      </nav>
-    </aside>
+<div class="app-container">
 
-    <main class="main-content" id="main-content">
-      <h1>הודעות אוטומטיות</h1>
-      <p>כאן תוכלו להגדיר ולשלוח הודעות אוטומטיות בוואטסאפ.</p>
+  <!-- sidebar navigation -->
+  <aside class="sidebar">
+    <div class="logo">מנהל וואטסאפ</div>
+    <nav>
+      <a href="#" id="menu-automated-messages" class="active" tabindex="0">
+        <!-- icon svg for automated messages menu -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+          <path d="M2 2v20l4-4h16V2H2zm16 10h-8v-2h8v2zm0-4h-8V6h8v2z"/>
+        </svg>
+        הודעות אוטומטיות
+      </a>
+    </nav>
+  </aside>
 
-      <section class="container">
-        <section class="left-panel">
-          <label for="excelInput">הדבק כאן את הטבלה שהעתקת מ-Excel (או CSV):</label>
-          <textarea id="excelInput" placeholder="הדבק כאן טבלה עם עמודות, לדוגמה:&#10;phone	name"></textarea>
-          <button id="clearTable">נקה טבלה</button>
+  <!-- main content section -->
+  <main class="main-content" id="main-content">
+    <h1>הודעות אוטומטיות</h1>
+    <p>כאן תוכלו להגדיר ולשלוח הודעות אוטומטיות בוואטסאפ.</p>
 
-          <div id="tableContainer" class="table-container" hidden>
-            <table id="dataTable" role="grid" aria-label="נתוני הטבלה"></table>
-          </div>
-        </section>
+    <section class="container">
 
-        <section class="right-panel">
-          <label for="messageInput">הודעה מותאמת אישית (השתמש ב:#שם_העמודה):</label>
-          <textarea id="messageInput" placeholder="לדוגמה: שלום #name הציון שלך הוא #score"></textarea>
+      <!-- left panel: excel/csv paste input and data table -->
+      <section class="left-panel">
+        <label for="excelInput">הדבק כאן את הטבלה שהעתקת מ-Excel (או CSV):</label>
+        <textarea id="excelInput" placeholder="הדבק כאן טבלה עם עמודות, לדוגמה:&#10;phone	name"></textarea>
+        <button id="clearTable">נקה טבלה</button>
 
-          <div class="preview" aria-live="polite" aria-atomic="true">
-            <h3>תצוגה מקדימה:</h3>
-            <div id="messagePreview" class="message-preview">כתוב הודעה מותאמת אישית.</div>
-          </div>
-
-          <button id="sendMessages">שלח הודעות</button>
-        </section>
+        <div id="tableContainer" class="table-container" hidden>
+          <table id="dataTable" role="grid" aria-label="נתוני הטבלה"></table>
+        </div>
       </section>
-    </main>
-  </div>
-  
-  <script src="renderer.js"></script>
+
+      <!-- right panel: custom message input and preview -->
+      <section class="right-panel">
+        <label for="messageInput">הודעה מותאמת אישית (השתמש ב:#שם_העמודה):</label>
+        <textarea id="messageInput" placeholder="לדוגמה: שלום #name הציון שלך הוא #score"></textarea>
+
+        <div class="preview" aria-live="polite" aria-atomic="true">
+          <h3>תצוגה מקדימה:</h3>
+          <div id="messagePreview" class="message-preview">כתוב הודעה מותאמת אישית.</div>
+        </div>
+
+        <button id="sendMessages">שלח הודעות</button>
+      </section>
+
+    </section>
+  </main>
+
+</div>
+
+<!-- javascript entry point for app functionality -->
+<script src="renderer.js"></script>
+
 </body>
 </html>

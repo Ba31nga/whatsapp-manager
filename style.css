@@ -1,4 +1,4 @@
-/* Reset and base */
+/* ===== Reset and Base Styles ===== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -20,6 +20,7 @@ body {
   width: 100vw;
 }
 
+/* ===== Layout Containers ===== */
 /* App container: sidebar + main content */
 .app-container {
   display: flex;
@@ -28,7 +29,27 @@ body {
   overflow: hidden;
 }
 
-/* Sidebar */
+/* Container with left and right panels */
+.container {
+  display: flex;
+  gap: 25px;
+  flex: 1;
+  min-height: 0; /* important for flex children scroll */
+}
+
+/* Left & Right panels */
+.left-panel,
+.right-panel {
+  background: #313338;
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* important for children scroll */
+}
+
+/* ===== Sidebar ===== */
 .sidebar {
   background-color: #1e1f22;
   width: 250px;
@@ -88,7 +109,7 @@ body {
   outline-color: #4ea1ff;
 }
 
-/* Main content */
+/* ===== Main Content ===== */
 .main-content {
   flex: 1;
   padding: 30px 40px;
@@ -124,26 +145,7 @@ body {
   color: #bbb;
 }
 
-/* Container with left and right panels */
-.container {
-  display: flex;
-  gap: 25px;
-  flex: 1;
-  min-height: 0; /* important for flex children scroll */
-}
-
-/* Left & Right panels */
-.left-panel,
-.right-panel {
-  background: #313338;
-  border-radius: 12px;
-  padding: 18px 22px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0; /* important for children scroll */
-}
-
+/* ===== Typography ===== */
 /* Labels */
 .left-panel label,
 .right-panel label {
@@ -153,6 +155,7 @@ body {
   user-select: none;
 }
 
+/* ===== Form Elements ===== */
 /* Textareas */
 textarea {
   flex-grow: 1;
@@ -198,6 +201,7 @@ button:focus {
   outline: none;
 }
 
+/* ===== Tables ===== */
 /* Table container */
 .table-container {
   overflow-y: auto;
@@ -231,10 +235,12 @@ th {
   z-index: 10;
 }
 
+/* ===== Preview & Highlight ===== */
 /* Placeholder highlights in message preview */
 .highlight-placeholder {
-  color: #4ea1ff;
-  font-weight: 700;
+  color: white;
+  background-color: #007acc; /* or whatever highlight color you want */
+  font-weight: bold;
 }
 
 /* Preview box */
@@ -255,7 +261,7 @@ th {
   user-select: text;
 }
 
-/* Login Overlay reused styles */
+/* ===== Login Overlay Styles ===== */
 .login-overlay {
   position: fixed;
   inset: 0;
@@ -272,12 +278,15 @@ th {
   background: #313338;
   padding: 30px 40px;
   border-radius: 12px;
-  width: 340px;
+  /* increase width to fit 2x2 QR codes comfortably */
+  width: 560px; /* 250 * 2 + 20 gap + some padding */
   box-shadow: 0 0 20px rgba(0,0,0,0.7);
   display: flex;
   flex-direction: column;
   align-items: center;
   user-select: none;
+  max-width: 90vw; /* responsive fallback on small screens */
+  box-sizing: border-box;
 }
 
 .qr-login-form h2 {
@@ -311,26 +320,6 @@ th {
   height: 230px;
 }
 
-/* Logout button */
-#logoutBtn {
-  background-color: #4ea1ff;
-  color: white;
-  font-weight: 700;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 24px;
-  font-size: 1rem;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.25s ease;
-}
-
-#logoutBtn:hover,
-#logoutBtn:focus {
-  background-color: #357acc;
-  outline: none;
-}
-
 /* Blur background app while login visible */
 body.login-active .app-container {
   filter: blur(4px);
@@ -338,8 +327,126 @@ body.login-active .app-container {
   user-select: none;
 }
 
-.highlight-placeholder {
-  color: white;
-  background-color: #007acc; /* or whatever highlight color you want */
-  font-weight: bold;
+/* ===== QR Code Grid & Wrappers ===== */
+.qr-codes-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 20px;
+  justify-content: center;
+  padding: 10px;
+  width: 100%; /* fill container */
+  box-sizing: border-box;
+}
+
+.qr-code-wrapper {
+  background: white;
+  border-radius: 12px;
+  width: 250px;
+  height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px #00000060;
+  user-select: none;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.qr-code-wrapper img {
+  width: 230px;
+  height: 230px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 10px;
+}
+
+.qr-code-wrapper:hover,
+.qr-code-wrapper:focus-within {
+  box-shadow: 0 0 20px #4ea1ff;
+  transform: translateY(-5px);
+}
+
+.qr-code-wrapper:focus-within {
+  outline: 3px solid #4ea1ff;
+  outline-offset: 3px;
+}
+
+.qr-code-wrapper img.loading {
+  background: repeating-conic-gradient(#4ea1ff 0% 25%, #222 25% 50%) 50% / 40px 40px;
+  animation: spin 1.5s linear infinite;
+  border-radius: 10px;
+}
+
+/* ===== Spinner and Checkmark ===== */
+.spinner {
+  border: 4px solid #333333; /* Light gray */
+  border-top: 4px solid #4caf50; /* Green */
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px auto;
+}
+
+.checkmark {
+  font-size: 30px;
+  color: #4caf50; /* Green */
+  text-align: center;
+  margin-bottom: 10px;
+  display: none; /* Initially hidden */
+}
+
+.login-status {
+  color: #007acc;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 15px;
+  min-height: 24px;
+}
+
+/* ===== Animations ===== */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 700px) {
+  .container {
+    flex-direction: column;
+  }
+  .left-panel,
+  .right-panel {
+    width: 100%;
+  }
+  .sidebar {
+    width: 70px;
+  }
+  .sidebar .logo {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+  .sidebar nav a {
+    justify-content: center;
+    padding: 12px 8px;
+  }
+  .sidebar nav a span {
+    display: none;
+  }
+  .qr-login-form {
+    width: 100%;
+    padding: 20px;
+  }
+  .qr-codes-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  .qr-code-wrapper {
+    width: 120px;
+    height: 120px;
+  }
+  .qr-code-wrapper img {
+    width: 100px;
+    height: 100px;
+  }
 }
