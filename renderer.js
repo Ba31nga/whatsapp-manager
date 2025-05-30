@@ -98,20 +98,17 @@ messageInput.addEventListener('input', () => {
 
 function updatePreview() {
   if (!parsedData.length) {
-    messagePreview.innerHTML = 'אין נתונים לתצוגה.';
+    messagePreview.textContent = 'אין נתונים לתצוגה.';
     return;
   }
 
   const headers = Object.keys(parsedData[0]);
   const rawMessage = messageInput.value;
 
-  const previewWithHighlight = highlightPlaceholders(rawMessage, headers);
-  messagePreview.innerHTML = previewWithHighlight;
+  // Instead of highlighting placeholders, show the first row preview replacing placeholders
+  const previewText = generatePreview(rawMessage, headers, parsedData[0]);
 
-  // If you want real preview text below highlighted preview, you can show that separately
-  // Here we just show the real preview as textContent (without HTML tags)
-  // If you want to keep highlights, skip this line or show realPreview elsewhere
-  // messagePreview.textContent = generatePreview(rawMessage, headers, parsedData[0]);
+  messagePreview.textContent = previewText || 'אין הודעה להצגה.';
 }
 
 sendMessagesBtn.addEventListener('click', () => {
