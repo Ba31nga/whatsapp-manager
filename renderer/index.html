@@ -83,6 +83,15 @@
           </svg>
           יומן הודעות שנשלחו
         </a>
+
+        <!-- New Q&A tab -->
+        <a href="#" id="menu-qa" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9 9h6v2H9zM9 13h4v2H9z"></path>
+          </svg>
+          שאלות ותשובות
+        </a>
       </nav>
     </aside>
 
@@ -121,31 +130,65 @@
     </main>
 
     <main class="main-content" id="log-content" style="display: none;">
-    <h1>יומן הודעות</h1>
-    <p>רשימת כל משלוחי ההודעות שבוצעו:</p>
+      <h1>יומן הודעות</h1>
+      <p>רשימת כל משלוחי ההודעות שבוצעו:</p>
 
-    <table id="logTable" class="log-table">
-      <thead>
-        <tr>
-          <th>תאריך</th>
-          <th>מספר הודעות</th>
-          <th>סוג</th>
-          <th>סטטוס</th>
-          <th>פרטים</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </main>
+      <table id="logTable" class="log-table">
+        <thead>
+          <tr>
+            <th>תאריך</th>
+            <th>מספר הודעות</th>
+            <th>סוג</th>
+            <th>סטטוס</th>
+            <th>פרטים</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </main>
+
+    <!-- New Q&A main content -->
+    <main class="main-content" id="qa-content" style="display: none;">
+      <h1>שאלות ותשובות</h1>
+      <p>ניהול שאלות ותשובות – הוסף, ערוך ומחק.</p>
+
+      <section class="qa-management-container container">
+
+        <!-- Left: Q&A list -->
+        <section class="left-panel qa-list-panel" aria-label="רשימת שאלות ותשובות">
+          <h2>רשימת שאלות</h2>
+          <ul id="qaList" class="qa-list" role="list" tabindex="0" aria-live="polite" aria-relevant="additions removals">
+            <!-- dynamically populated list of Q&A -->
+          </ul>
+        </section>
+
+        <!-- Right: Q&A form -->
+        <section class="right-panel qa-form-panel" aria-label="טופס שאלות ותשובות">
+          <h2>הוסף / ערוך שאלה</h2>
+          <label for="qaQuestionInput">שאלה:</label>
+          <textarea id="qaQuestionInput" placeholder="כתוב את השאלה כאן..." aria-describedby="qaQuestionHelp"></textarea>
+          <small id="qaQuestionHelp" style="color:#888; margin-bottom:10px; display:block;">הקלד את השאלה במלואה</small>
+
+          <label for="qaAnswerInput">תשובה:</label>
+          <textarea id="qaAnswerInput" placeholder="כתוב את התשובה כאן..." aria-describedby="qaAnswerHelp"></textarea>
+          <small id="qaAnswerHelp" style="color:#888; margin-bottom:15px; display:block;">הקלד את התשובה המלאה</small>
+
+          <div class="form-buttons">
+            <button id="saveQAButton">שמור שאלה ותשובה</button>
+            <button id="clearQAForm" type="button" style="background:#777;">נקה טופס</button>
+          </div>
+        </section>
+
+      </section>
+    </main>
+
 
   </div>
 
   <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
-  
   <!-- javascript entry point for app functionality -->
   <script type="module" src="./js/renderer.js"></script>
-  
 
 </body>
 </html>
