@@ -1,4 +1,4 @@
-const path = require('path');
+const sessionStatuses = {};
 const { getAllQA, addQA, updateQA, deleteQA } = require('./googleSheetsService');
 const SessionManager = require('./sessionManager');
 const Logger = require('./logger');
@@ -9,6 +9,19 @@ let mainWindow;
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+function setSessionStatus(sessionId, status) {
+  sessionStatuses[sessionId] = status;
+  if (mainWindow?.webContents) {
+    mainWindow.webContents.send('session-status-updated', sessionId, status);
+  }
+  console.log(`[Backend] Session ${sessionId} status set to '${status}'`);
+}
+
+function getSessionStatus(sessionId) {
+  return sessionStatuses[sessionId] || 'available';
+}
+
 
 // Typing speeds in chars per second for simulation
 const typingSpeeds = {
@@ -64,25 +77,25 @@ function startBackend(ipcMain, window) {
   ipcMain.handle('send-messages', async (event, messages) => {
     console.log('[Backend] IPC send-messages handler called with messages:', messages);
     try {
-      // Run all session message sends concurrently
       const sessionPromises = messages.map(async (msgBatch) => {
-        console.log(`[Backend] Sending messages for session ${msgBatch.sessionId} with ${msgBatch.data.length} entries`);
+        const sessionId = msgBatch.sessionId;
+        console.log(`[Backend] Sending messages for session ${sessionId} with ${msgBatch.data.length} entries`);
 
         const typingSpeed = msgBatch.typingSpeed || 'average';
 
+        // Set session status to 'bulking'
+        setSessionStatus(sessionId, 'bulking');
+
         for (const recipientData of msgBatch.data) {
-          // Customize message template by replacing placeholders
           let customizedMessage = msgBatch.messageTemplate.replace(/#(\w+)/g, (_, key) => recipientData[key] || `#${key}`);
-
-          // Simulate typing delay before sending each message
           await simulateTypingDelay(customizedMessage, typingSpeed);
-
-          // Send the message via SessionManager
-          await sessionManager.sendSingleMessage(msgBatch.sessionId, recipientData, customizedMessage);
+          await sessionManager.sendSingleMessage(sessionId, recipientData, customizedMessage);
         }
+
+        // Mark session available again
+        setSessionStatus(sessionId, 'available');
       });
 
-      // Await all sessions concurrently
       await Promise.all(sessionPromises);
 
       console.log('[Backend] All messages sent successfully');
@@ -136,6 +149,10 @@ function startBackend(ipcMain, window) {
       console.error('[Backend] Error deleting QA from Google Sheets:', err);
       return { success: false, error: err.message };
     }
+  });
+
+  ipcMain.handle('session:get-status', async (event, sessionId) => {
+    return { success: true, status: getSessionStatus(sessionId) };
   });
 
 }

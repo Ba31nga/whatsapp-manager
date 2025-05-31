@@ -92,6 +92,13 @@
           </svg>
           שאלות ותשובות
         </a>
+
+        <a href="#" id="menu-sessions" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          מצב חיבורים
+        </a>
       </nav>
     </aside>
 
@@ -197,8 +204,37 @@
     </main>
 
 
+    <main class="main-content" id="sessions-content" style="display: none;">
+      <h1>מצב חיבורים</h1>
+      <p>כאן ניתן לראות את מצב ארבעת החיבורים למערכת:</p>
 
+      <button id="refresh-session-statuses" class="refresh-button" title="רענן מצב חיבורים">
+        🔄 רענן מצב חיבורים
+      </button>
 
+      <section class="sessions-grid">
+        <div class="session-card" id="session1">
+          <h2>Session 1</h2>
+          <div class="status-indicator" id="status1"></div>
+          <p id="sessionStatusText1">בודק...</p>
+        </div>
+        <div class="session-card" id="session2">
+          <h2>Session 2</h2>
+          <div class="status-indicator" id="status2"></div>
+          <p id="sessionStatusText2">בודק...</p>
+        </div>
+        <div class="session-card" id="session3">
+          <h2>Session 3</h2>
+          <div class="status-indicator" id="status3"></div>
+          <p id="sessionStatusText3">בודק...</p>
+        </div>
+        <div class="session-card" id="session4">
+          <h2>Session 4</h2>
+          <div class="status-indicator" id="status4"></div>
+          <p id="sessionStatusText4">בודק...</p>
+        </div>
+      </section>
+    </main>
 
   </div>
 

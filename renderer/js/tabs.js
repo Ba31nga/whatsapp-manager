@@ -1,10 +1,9 @@
-// renderer/js/tabs.js
-
 export function setupTabListeners() {
   const tabs = [
     { buttonId: 'menu-automated-messages', contentId: 'main-content' },
     { buttonId: 'menu-log', contentId: 'log-content' },
     { buttonId: 'menu-qa', contentId: 'qa-content' },
+    { buttonId: 'menu-sessions', contentId: 'sessions-content' }, 
   ];
 
   tabs.forEach(({ buttonId, contentId }) => {

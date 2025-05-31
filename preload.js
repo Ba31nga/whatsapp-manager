@@ -62,4 +62,21 @@ contextBridge.exposeInMainWorld('api', {
     console.log(`[Preload] deleteQA invoked with id=${id}`);
     return await ipcRenderer.invoke('qa:delete', id);
   },
+
+  // SESSION STATUS HANDLERS
+
+  // Listen for realtime session status updates: "available", "bulking", "chatbot", etc.
+  onSessionStatusUpdated: (callback) => {
+    console.log('[Preload] Registered onSessionStatusUpdated listener');
+    ipcRenderer.on('session-status-updated', (event, sessionId, status) => {
+      console.log(`[Preload] Received session-status-updated event: sessionId=${sessionId}, status=${status}`);
+      callback(sessionId, status);
+    });
+  },
+
+  // Request current session status from backend
+  requestSessionStatus: async (sessionId) => {
+    console.log(`[Preload] requestSessionStatus invoked for sessionId=${sessionId}`);
+    return await ipcRenderer.invoke('session:get-status', sessionId);
+  },
 });

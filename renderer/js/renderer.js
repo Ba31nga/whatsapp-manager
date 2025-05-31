@@ -4,6 +4,7 @@ import { setupMessageInput, setupSendButton, setupClearButton } from './message.
 import { loadLogs } from './logs.js';
 import { setupTabListeners } from './tabs.js';
 import { setupQATab } from './qa-tab.js';
+import { initSessionsStatusTab } from './sessionsStatusTab.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const api = window.api; 
@@ -20,4 +21,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setupClearButton();
   loadLogs(api);
   setupQATab(api);
+  initSessionsStatusTab(api);
 });
