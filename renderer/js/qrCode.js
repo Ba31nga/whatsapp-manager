@@ -42,8 +42,9 @@ function getUiElements(idx) {
 
 export function setupQrCodeListeners(api) {
   console.log('setupQrCodeListeners called, api:', api);
-  console.log('api.onQrCode:', typeof api.onQrCode);
-  console.log('api.onLoginStatus:', typeof api.onLoginStatus);
+
+  // Store the statuses of all sessions here, default empty string
+  const sessionStatuses = ['', '', '', ''];
 
   api.onQrCode((sessionId, qr) => {
     console.log('Received qr event:', sessionId, qr);
@@ -91,6 +92,9 @@ export function setupQrCodeListeners(api) {
       return;
     }
 
+    // Update stored status
+    sessionStatuses[idx] = status;
+
     loginStatuses[idx].textContent = status;
 
     const ui = getUiElements(idx);
@@ -100,9 +104,6 @@ export function setupQrCodeListeners(api) {
 
     switch (status) {
       case 'מחובר':
-        // Hide the entire big overlay when logged in
-        if (qrLoginOverlay) qrLoginOverlay.style.display = 'none';
-
         safeSetDisplay(qrImage, 'none');
         safeSetDisplay(spinner, 'none');
         safeSetDisplay(checkmark, 'block');
@@ -110,9 +111,6 @@ export function setupQrCodeListeners(api) {
         break;
 
       case 'מנותק, מנסה להתחבר מחדש':
-        // Show the overlay again if disconnected and reconnecting
-        if (qrLoginOverlay) qrLoginOverlay.style.display = 'flex';
-
         safeSetDisplay(qrImage, 'none');
         safeSetDisplay(spinner, 'block');
         safeSetDisplay(checkmark, 'none');
@@ -120,9 +118,6 @@ export function setupQrCodeListeners(api) {
         break;
 
       case 'כשל באימות':
-        // Show overlay on auth failure
-        if (qrLoginOverlay) qrLoginOverlay.style.display = 'flex';
-
         safeSetDisplay(qrImage, 'none');
         safeSetDisplay(spinner, 'none');
         safeSetDisplay(checkmark, 'none');
@@ -130,14 +125,23 @@ export function setupQrCodeListeners(api) {
         break;
 
       default:
-        // Show overlay in all other states
-        if (qrLoginOverlay) qrLoginOverlay.style.display = 'flex';
-
         safeSetDisplay(qrImage, 'block');
         safeSetDisplay(spinner, 'block');
         safeSetDisplay(checkmark, 'none');
         safeSetDisplay(overlay, 'none');
         break;
     }
+
+    // Check if all sessions are connected
+    const allConnected = sessionStatuses.every(s => s === 'מחובר');
+
+    if (qrLoginOverlay) {
+      if (allConnected) {
+        qrLoginOverlay.style.display = 'none';  // hide overlay only if all connected
+      } else {
+        qrLoginOverlay.style.display = 'flex';  // show overlay otherwise
+      }
+    }
   });
 }
+
