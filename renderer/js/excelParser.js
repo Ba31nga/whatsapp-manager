@@ -25,7 +25,17 @@ function parseExcelText(text) {
   const lines = text.split('\n').filter(l => l.trim() !== '');
   if (lines.length === 0) return [];
 
-  const headers = lines[0].split(/\t|,/).map(h => h.trim());
+  let headers = lines[0].split(/\t|,/).map(h => h.trim());
+
+  // Find the phone header (case insensitive, Hebrew or English)
+  const phoneHeaderCandidates = ['phone', 'טלפון', 'מספר', 'phone number', 'PhoneNumber', 'מספר טלפון'];
+  let phoneHeader = headers.find(h => phoneHeaderCandidates.includes(h.toLowerCase()));
+
+  // If found, normalize it to 'phone'
+  if (phoneHeader) {
+    headers = headers.map(h => (h === phoneHeader ? 'phone' : h));
+  }
+
   return lines.slice(1).map(line => {
     const cells = line.split(/\t|,/);
     let obj = {};

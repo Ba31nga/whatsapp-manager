@@ -4,73 +4,97 @@ const EventEmitter = require('events');
 class SessionManager extends EventEmitter {
   constructor() {
     super();
-    this.sessions = new Map();
-    this.readySessions = new Set();
+    this.sessions = new Map();          // sessionId -> client
+    this.sessionStatus = new Map();     // sessionId -> status string
+    this.retryCounts = new Map();       // sessionId -> number of reconnect attempts
+    this.MAX_RETRIES = 5;
+    this.RETRY_DELAY_MS = 5000;
+
     console.log('[SessionManager] Initializing sessions...');
     this.initSessions();
   }
 
   async initSessions() {
-    // Create all sessions concurrently
-    const createPromises = [];
     for (let i = 1; i <= 4; i++) {
       console.log(`[SessionManager] Creating session ${i}`);
-      createPromises.push(this.createSession(i));
+      await this.delay(2000);
+      this.createSession(i);
     }
-    await Promise.all(createPromises);
   }
 
-  async createSession(sessionId) {
-    if (this.sessions.has(sessionId)) {
-      console.log(`[SessionManager] Session ${sessionId} already exists, skipping creation.`);
-      return;
-    }
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
+  setSessionStatus(sessionId, status) {
+    this.sessionStatus.set(sessionId, status);
+    this.emit('status', sessionId, status);
+  }
+
+  createSession(sessionId) {
     console.log(`[SessionManager] createSession called for session ${sessionId}`);
+
+    // Reset retry count on new session creation
+    this.retryCounts.set(sessionId, 0);
 
     const client = new Client({
       authStrategy: new LocalAuth({ clientId: `client${sessionId}` }),
       puppeteer: {
         headless: true,
-        args: ['--no-sandbox'],
+        args: ['--no-sandbox']
       },
     });
+
+    this.sessions.set(sessionId, client);
+    this.setSessionStatus(sessionId, 'מתחבר...');
 
     client.on('qr', (qr) => {
       console.log(`[SessionManager] QR received for session ${sessionId}`);
       this.emit('qr', sessionId, qr);
-      this.emit('status', sessionId, 'סריקת QR נדרשת');
+      this.setSessionStatus(sessionId, 'סריקת QR נדרשת');
     });
 
     client.on('ready', () => {
       console.log(`[SessionManager] Client ready for session ${sessionId}`);
-      this.readySessions.add(sessionId);
-      this.emit('status', sessionId, 'מחובר');
-      this.emit('ready', sessionId);
+      this.setSessionStatus(sessionId, 'מחובר');
+      this.retryCounts.set(sessionId, 0);  // reset retries on successful ready
     });
 
     client.on('authenticated', () => {
       console.log(`[SessionManager] Client authenticated for session ${sessionId}`);
-      this.emit('status', sessionId, 'מאומת');
+      this.setSessionStatus(sessionId, 'מאומת');
     });
 
     client.on('auth_failure', (msg) => {
       console.log(`[SessionManager] Authentication failure for session ${sessionId}: ${msg}`);
-      this.emit('status', sessionId, 'כשל באימות');
+      this.setSessionStatus(sessionId, 'כשל באימות');
     });
 
-    client.on('disconnected', async (reason) => {
+    client.on('disconnected', (reason) => {
       console.log(`[SessionManager] Disconnected session ${sessionId}, reason: ${reason}`);
-      this.emit('status', sessionId, 'מנותק, מנסה להתחבר מחדש');
-      this.readySessions.delete(sessionId);
 
-      // Destroy current client and recreate after short delay
-      await client.destroy();
+      this.setSessionStatus(sessionId, 'מנותק, מנסה להתחבר מחדש');
 
-      // Remove old session and recreate new one
-      this.sessions.delete(sessionId);
-      // Recreate session (wait 3 seconds before retrying)
-      setTimeout(() => this.createSession(sessionId), 3000);
+      // Increment retry count
+      let retries = this.retryCounts.get(sessionId) || 0;
+      retries++;
+      this.retryCounts.set(sessionId, retries);
+
+      if (retries > this.MAX_RETRIES) {
+        console.error(`[SessionManager] Session ${sessionId} exceeded max retries. Stopping reconnect attempts.`);
+        this.setSessionStatus(sessionId, 'מנותק לצמיתות - אנא בדוק את החיבור');
+        return;
+      }
+
+      // Delay before recreating session to avoid rapid reconnect loop
+      setTimeout(async () => {
+        try {
+          await client.destroy();
+        } catch (e) {
+          console.warn(`[SessionManager] Error destroying client for session ${sessionId}:`, e.message);
+        }
+        this.createSession(sessionId);
+      }, this.RETRY_DELAY_MS);
     });
 
     client.on('change_state', (state) => {
@@ -85,39 +109,9 @@ class SessionManager extends EventEmitter {
       console.log(`[SessionManager] Message received for session ${sessionId}:`, msg.body);
     });
 
-    try {
-      await client.initialize();
-      this.sessions.set(sessionId, client);
-    } catch (err) {
+    client.initialize().catch((err) => {
       console.error(`[SessionManager] Error initializing client for session ${sessionId}:`, err);
-    }
-  }
-
-  // Wait for all sessions to be ready
-  waitForAllReady(timeoutMs = 30000) {
-    return new Promise((resolve, reject) => {
-      const expectedSessions = 4;
-      const checkReady = () => {
-        if (this.readySessions.size === expectedSessions) {
-          resolve();
-        }
-      };
-
-      checkReady();
-
-      const interval = setInterval(() => {
-        checkReady();
-      }, 500);
-
-      // Timeout fallback
-      setTimeout(() => {
-        clearInterval(interval);
-        if (this.readySessions.size === expectedSessions) {
-          resolve();
-        } else {
-          reject(new Error('Timeout waiting for all sessions to be ready'));
-        }
-      }, timeoutMs);
+      this.setSessionStatus(sessionId, 'שגיאה באתחול');
     });
   }
 
@@ -129,11 +123,11 @@ class SessionManager extends EventEmitter {
     if (phone.startsWith('0')) {
       phone = '972' + phone.slice(1);
     } else if (phone.startsWith('972')) {
-      // already in correct format
+      // already correct
     } else if (phone.length === 9) {
       phone = '972' + phone;
     } else if (phone.length < 9) {
-      return null; // invalid phone number
+      return null;
     }
 
     return phone;
@@ -141,8 +135,10 @@ class SessionManager extends EventEmitter {
 
   async sendMessages(sessionId, data, messageTemplate) {
     const client = this.sessions.get(sessionId);
-    if (!client || !this.readySessions.has(sessionId)) {
-      throw new Error(`Session ${sessionId} לא מחובר או לא מוכן`);
+    const status = this.sessionStatus.get(sessionId);
+
+    if (!client || !client.info || !client.info.wid || status !== 'מחובר') {
+      throw new Error(`Session ${sessionId} לא מחובר`);
     }
 
     console.log(`[SessionManager] Session ${sessionId} sending ${data.length} messages`);
@@ -186,16 +182,9 @@ class SessionManager extends EventEmitter {
     }
   }
 
-  /**
-   * Splits workload and sends messages concurrently across sessions.
-   * Waits for all sessions to be ready before sending.
-   */
   async sendMessagesSplit(data, messageTemplate) {
     const totalSessions = 4;
     const chunkSize = Math.ceil(data.length / totalSessions);
-
-    // Wait for all sessions to be ready before sending
-    await this.waitForAllReady();
 
     const chunks = [];
     for (let i = 0; i < totalSessions; i++) {
@@ -208,7 +197,7 @@ class SessionManager extends EventEmitter {
       const sessionId = index + 1;
       if (chunk.length === 0) {
         console.log(`[SessionManager] No data for session ${sessionId}, skipping send.`);
-        return; // skip empty chunks
+        return;
       }
       sendPromises.push(this.sendMessages(sessionId, chunk, messageTemplate));
     });
@@ -218,8 +207,10 @@ class SessionManager extends EventEmitter {
 
   async sendSingleMessage(sessionId, recipientData, messageTemplate) {
     const client = this.sessions.get(sessionId);
-    if (!client || !this.readySessions.has(sessionId)) {
-      throw new Error(`Session ${sessionId} לא מחובר או לא מוכן`);
+    const status = this.sessionStatus.get(sessionId);
+
+    if (!client || !client.info || !client.info.wid || status !== 'מחובר') {
+      throw new Error(`Session ${sessionId} לא מחובר`);
     }
 
     const personalizedMessage = this.replacePlaceholders(messageTemplate, recipientData);
@@ -254,10 +245,21 @@ class SessionManager extends EventEmitter {
   }
 
   replacePlaceholders(template, dataRow) {
-    return template.replace(/#(\w+)/g, (match, p1) => {
-      return dataRow[p1] !== undefined ? dataRow[p1] : match;
+    // create normalized key map from dataRow:
+    const normalizedMap = {};
+    for (const key in dataRow) {
+      const normalizedKey = key.replace(/[\s_]/g, '').toLowerCase();
+      normalizedMap[normalizedKey] = dataRow[key];
+    }
+
+    return template.replace(/#(?:\{([\p{L}\w\s_]+)\}|([\p{L}\w_]+))/gu, (match, p1, p2) => {
+      const keyRaw = p1 || p2;
+      const normalizedKey = keyRaw.replace(/[\s_]/g, '').toLowerCase();
+
+      return normalizedMap[normalizedKey] !== undefined ? normalizedMap[normalizedKey] : match;
     });
   }
+
 }
 
 module.exports = SessionManager;

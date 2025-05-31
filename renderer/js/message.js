@@ -1,5 +1,6 @@
 import { getParsedData } from './excelParser.js';
 import { showToast } from './toastManager.js'; // your external toast manager
+import { showConfirmAlert } from './alertModal.js';
 
 const messageInput = document.getElementById('messageInput');
 const messagePreview = document.getElementById('messagePreview');
@@ -25,13 +26,35 @@ function updatePreview() {
     messagePreview.textContent = 'כתוב הודעה מותאמת אישית.';
     return;
   }
-  // Use the first row's data to preview the message with replaced placeholders
+
   const firstRow = parsedData[0];
-  const previewText = template.replace(/#(\w+)/g, (_, key) => {
-    return firstRow[key] !== undefined ? firstRow[key] : `#${key}`;
-  });
+
+  // Normalize keys: remove spaces and underscores, lowercase
+  const normalizedMap = {};
+  for (const key in firstRow) {
+    const normalizedKey = key.replace(/[\s_]/g, '').toLowerCase();
+    normalizedMap[normalizedKey] = firstRow[key];
+  }
+
+  // Replace placeholders in the template:
+  // Match #key, #key_with_underscores or #{key with spaces}
+  const previewText = template.replace(
+    /#(?:\{([\p{L}\w\s_]+)\}|([\p{L}\w_]+))/gu,
+    (match, p1, p2) => {
+      const keyRaw = p1 || p2; // key inside braces or without braces
+      const normalizedKey = keyRaw.replace(/[\s_]/g, '').toLowerCase();
+
+      // Return the mapped value or original placeholder if no match
+      return normalizedMap[normalizedKey] !== undefined
+        ? normalizedMap[normalizedKey]
+        : match;
+    }
+  );
+
   messagePreview.textContent = previewText;
 }
+
+
 
 /**
  * Setup send button to send split messages via API.
@@ -39,6 +62,10 @@ function updatePreview() {
  */
 export function setupSendButton(api) {
   sendBtn.addEventListener('click', async () => {
+    // Show confirmation alert before sending
+    const confirmed = await showConfirmAlert('האם אתה בטוח שברצונך לשלוח את ההודעות?');
+    if (!confirmed) return;  // user cancelled
+
     const parsedData = getParsedData();
 
     if (parsedData.length === 0) {
@@ -52,13 +79,9 @@ export function setupSendButton(api) {
       return;
     }
 
-    // Get typing speed or default to 'average'
     const typingSpeed = typingSpeedSelect?.value || 'average';
-
-    // Split parsed data into 4 chunks for 4 sessions
     const chunks = chunkArray(parsedData, 4);
 
-    // Build payload for each session
     const messagesToSend = chunks.map((chunk, idx) => ({
       sessionId: idx + 1,
       data: chunk,
@@ -66,7 +89,6 @@ export function setupSendButton(api) {
       typingSpeed,
     }));
 
-    // Guard: if all chunks empty (shouldn't happen), show error
     if (messagesToSend.every(m => m.data.length === 0)) {
       showToast('אין נתונים לשליחה.', 'error');
       return;
