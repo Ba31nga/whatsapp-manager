@@ -124,7 +124,10 @@ function startBackend(ipcMain, window) {
   ipcMain.handle('qa:add', async (event, question, answer) => {
     try {
       await addQA(question, answer);
-      return { success: true };
+      // Fetch all QA again and get the last added one
+      const data = await getAllQA();
+      const lastQA = data[data.length - 1]; // Return last added
+      return { success: true, data: lastQA };
     } catch (err) {
       console.error('[Backend] Error adding QA to Google Sheets:', err);
       return { success: false, error: err.message };
