@@ -1,22 +1,28 @@
 // renderer/js/tabs.js
 
 export function setupTabListeners() {
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
+  const tabs = [
+    { buttonId: 'menu-automated-messages', contentId: 'main-content' },
+    { buttonId: 'menu-log', contentId: 'log-content' },
+    { buttonId: 'menu-qa', contentId: 'qa-content' },
+  ];
 
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const tabId = button.dataset.tab;
+  tabs.forEach(({ buttonId, contentId }) => {
+    const button = document.getElementById(buttonId);
+    const content = document.getElementById(contentId);
 
-      // Remove active from all buttons
-      tabButtons.forEach(btn => btn.classList.remove('active'));
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
 
-      // Hide all tab contents
-      tabContents.forEach(content => content.classList.add('hidden'));
+      // Deactivate all buttons and hide all content
+      tabs.forEach(({ buttonId: bId, contentId: cId }) => {
+        document.getElementById(bId).classList.remove('active');
+        document.getElementById(cId).style.display = 'none';
+      });
 
       // Activate current
       button.classList.add('active');
-      document.getElementById(tabId).classList.remove('hidden');
+      content.style.display = 'block';
     });
   });
 }

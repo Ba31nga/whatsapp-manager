@@ -46,3 +46,6 @@ Thumbs.db
 # Excel temp files (in case you open in Excel)
 ~$*.xlsx
 ~$*.xls
+
+# Service account JSON
+service-accounts/service-account.json
