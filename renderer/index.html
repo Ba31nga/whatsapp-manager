@@ -152,35 +152,52 @@
       <h1>שאלות ותשובות</h1>
       <p>ניהול שאלות ותשובות – הוסף, ערוך ומחק.</p>
 
-      <section class="qa-management-container container">
+      <section class="qa-management-container container" style="display: flex; flex-direction: column; gap: 2rem; max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
 
-        <!-- Left: Q&A list -->
-        <section class="left-panel qa-list-panel" aria-label="רשימת שאלות ותשובות">
-          <h2>רשימת שאלות</h2>
-          <ul id="qaList" class="qa-list" role="list" tabindex="0" aria-live="polite" aria-relevant="additions removals">
-            <!-- dynamically populated list of Q&A -->
-          </ul>
+        <!-- Q&A form on top -->
+        <section class="qa-form-panel" aria-label="טופס שאלות ותשובות" style="width: 100%;">
+          <h2>הוסף / ערוך שאלה</h2>
+
+          <label for="qaQuestionInput" style="margin-top: 0.5rem; font-weight: 600;">שאלה:</label>
+          <textarea id="qaQuestionInput" placeholder="כתוב את השאלה כאן..." aria-describedby="qaQuestionHelp" style="width: 100%; min-height: 80px; padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
+          <small id="qaQuestionHelp" style="color: #666; margin-bottom: 1rem;">הקלד את השאלה במלואה</small>
+
+          <label for="qaAnswerInput" style="font-weight: 600;">תשובה:</label>
+          <textarea id="qaAnswerInput" placeholder="כתוב את התשובה כאן..." aria-describedby="qaAnswerHelp" style="width: 100%; min-height: 120px; padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
+          <small id="qaAnswerHelp" style="color: #666; margin-bottom: 1.5rem;">הקלד את התשובה המלאה</small>
+
+          <div class="form-buttons" style="display: flex; gap: 1rem;">
+            <button id="saveQAButton" style="flex: 1; background-color: #2563eb; color: white; border: none; padding: 0.75rem 1rem; font-size: 1rem; border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease;">
+              שמור שאלה ותשובה
+            </button>
+            <button id="clearQAForm" type="button" style="flex: 1; background-color: #6b7280; color: white; border: none; padding: 0.75rem 1rem; font-size: 1rem; border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease;">
+              נקה טופס
+            </button>
+          </div>
         </section>
 
-        <!-- Right: Q&A form -->
-        <section class="right-panel qa-form-panel" aria-label="טופס שאלות ותשובות">
-          <h2>הוסף / ערוך שאלה</h2>
-          <label for="qaQuestionInput">שאלה:</label>
-          <textarea id="qaQuestionInput" placeholder="כתוב את השאלה כאן..." aria-describedby="qaQuestionHelp"></textarea>
-          <small id="qaQuestionHelp" style="color:#888; margin-bottom:10px; display:block;">הקלד את השאלה במלואה</small>
-
-          <label for="qaAnswerInput">תשובה:</label>
-          <textarea id="qaAnswerInput" placeholder="כתוב את התשובה כאן..." aria-describedby="qaAnswerHelp"></textarea>
-          <small id="qaAnswerHelp" style="color:#888; margin-bottom:15px; display:block;">הקלד את התשובה המלאה</small>
-
-          <div class="form-buttons">
-            <button id="saveQAButton">שמור שאלה ותשובה</button>
-            <button id="clearQAForm" type="button" style="background:#777;">נקה טופס</button>
-          </div>
+        <!-- Q&A table list at bottom -->
+        <section class="qa-list-panel" aria-label="רשימת שאלות ותשובות" style="width: 100%;">
+          <h2>רשימת שאלות ותשובות</h2>
+          <table id="qaListTable" class="qa-list-table" style="width: 100%; border-collapse: collapse; text-align: right;">
+            <thead>
+              <tr>
+                <th style="padding: 10px; border-bottom: 2px solid #4ea1ff;">שאלה</th>
+                <th style="padding: 10px; border-bottom: 2px solid #4ea1ff;">תשובה</th>
+                <th style="padding: 10px; border-bottom: 2px solid #4ea1ff; width: 120px;">פעולות</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- dynamically populate rows here -->
+            </tbody>
+          </table>
         </section>
 
       </section>
     </main>
+
+
+
 
 
   </div>

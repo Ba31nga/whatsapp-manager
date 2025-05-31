@@ -3,6 +3,7 @@ import { setupExcelInput } from './excelParser.js';
 import { setupMessageInput, setupSendButton, setupClearButton } from './message.js';
 import { loadLogs } from './logs.js';
 import { setupTabListeners } from './tabs.js';
+import { setupQATab } from './qa-tab.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const api = window.api; 
@@ -18,4 +19,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSendButton(api);
   setupClearButton();
   loadLogs(api);
+  setupQATab(api);
 });

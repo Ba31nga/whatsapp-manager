@@ -1,3 +1,5 @@
+const path = require('path');
+const { getAllQA, addQA, updateQA, deleteQA } = require('./googleSheetsService');
 const SessionManager = require('./sessionManager');
 const Logger = require('./logger');
 
@@ -95,6 +97,47 @@ function startBackend(ipcMain, window) {
     console.log('[Backend] IPC get-logs handler called');
     return Logger.getLogs();
   });
+
+  ipcMain.handle('qa:getAll', async () => {
+    try {
+      const data = await getAllQA();
+      return { success: true, data };
+    } catch (err) {
+      console.error('[Backend] Error fetching QA from Google Sheets:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('qa:add', async (event, question, answer) => {
+    try {
+      await addQA(question, answer);
+      return { success: true };
+    } catch (err) {
+      console.error('[Backend] Error adding QA to Google Sheets:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('qa:update', async (event, id, question, answer) => {
+    try {
+      await updateQA(id, question, answer);
+      return { success: true };
+    } catch (err) {
+      console.error('[Backend] Error updating QA in Google Sheets:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('qa:delete', async (event, id) => {
+    try {
+      await deleteQA(id);
+      return { success: true };
+    } catch (err) {
+      console.error('[Backend] Error deleting QA from Google Sheets:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
 }
 
 module.exports = { startBackend };
