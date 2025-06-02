@@ -1,3 +1,4 @@
+const { getBestAnswer } = require('./aiChatService');
 const sessionStatuses = {};
 const { getAllQA, addQA, updateQA, deleteQA } = require('./googleSheetsService');
 const SessionManager = require('./sessionManager');
@@ -157,6 +158,24 @@ function startBackend(ipcMain, window) {
   ipcMain.handle('session:get-status', async (event, sessionId) => {
     return { success: true, status: getSessionStatus(sessionId) };
   });
+  
+  ipcMain.handle('chatbot:ask', async (event, question) => {
+    if (!question) {
+      return { success: false, error: 'שאלה חסרה' };
+    }
+
+    try {
+      const result = await getBestAnswer(question);
+      if (!result.answer) {
+        return { success: true, answer: 'מצטער, לא מצאתי תשובה מתאימה.', confidence: result.confidence };
+      }
+      return { success: true, answer: result.answer, confidence: result.confidence };
+    } catch (err) {
+      console.error('[Backend] Error in chatbot:ask handler', err);
+      return { success: false, error: 'שגיאה פנימית' };
+    }
+  });
+
 
 }
 

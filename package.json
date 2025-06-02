@@ -19,9 +19,13 @@
   "homepage": "https://github.com/Ba31nga/whatsapp-manager#readme",
   "description": "",
   "dependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "axios": "^1.9.0",
+    "dotenv": "^16.5.0",
     "electron": "^36.3.2",
     "express": "^5.1.0",
     "googleapis": "^149.0.0",
+    "openai": "^5.0.1",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.1",
     "whatsapp-web.js": "^1.28.0",

@@ -79,4 +79,10 @@ contextBridge.exposeInMainWorld('api', {
     console.log(`[Preload] requestSessionStatus invoked for sessionId=${sessionId}`);
     return await ipcRenderer.invoke('session:get-status', sessionId);
   },
+
+  // Ask chatbot a question
+  askChatbot: async (question) => {
+    console.log('[Preload] askChatbot invoked with question:', question);
+    return await ipcRenderer.invoke('chatbot:ask', question);
+  },
 });
