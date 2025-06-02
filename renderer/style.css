@@ -849,6 +849,130 @@ body.login-active .app-container {
   }
 }
 
+/* ========================== chatbot ====================== */
+
+.chatbot-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  direction: rtl;
+}
+
+.chatbot-sidebar {
+  width: 250px;
+  background-color: #121e2a; /* very dark navy */
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #2c3e50; /* darker slate blue */
+  color: #d4d9e2; /* light gray-blue */
+}
+
+.chatbot-sidebar h2 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #2c3e50;
+  padding-bottom: 0.5rem;
+  color: #5a84a8; /* muted medium blue */
+}
+
+.chatbot-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chatbot-sidebar li {
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #223348; /* muted dark slate */
+  transition: background-color 0.2s;
+  font-size: 0.95rem;
+  color: #b7becd; /* muted light gray-blue */
+}
+
+.chatbot-sidebar li:hover {
+  background-color: #2c3e50; /* slightly lighter slate */
+}
+
+.chatbot-sidebar li.active {
+  background-color: #4a6a8a; /* medium muted blue */
+  color: #f0f4f8; /* off-white */
+  font-weight: 600;
+}
+
+.chatbot-chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #0e1824; /* very dark navy */
+  border: 1px solid #2c3e50;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #d4d9e2;
+}
+
+.chatbot-chat-panel h2 {
+  font-size: 1.2rem;
+  color: #5a84a8; /* muted medium blue */
+  margin-bottom: 0.5rem;
+}
+
+.chat-window {
+  background-color: #182936; /* dark slate blue */
+  border: 1px solid #2c3e50;
+  border-radius: 6px;
+  padding: 1rem;
+  height: 300px;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #e4e8f0; /* soft off-white */
+}
+
+.chat-window .placeholder {
+  color: #7a8a9e; /* muted gray */
+  font-style: italic;
+}
+
+.human-button {
+  align-self: flex-start;
+  background-color: #a73c3c; /* warm, rusty red */
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.human-button:hover {
+  background-color: #8a3232; /* slightly darker warm red */
+}
+
+.start-chatbot-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.start-chatbot-button:hover {
+  background-color: #005ea6;
+}
+
+
+
 
 /* ===== Animations ===== */
 @keyframes spin {

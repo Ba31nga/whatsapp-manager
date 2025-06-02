@@ -4,6 +4,7 @@ export function setupTabListeners() {
     { buttonId: 'menu-log', contentId: 'log-content' },
     { buttonId: 'menu-qa', contentId: 'qa-content' },
     { buttonId: 'menu-sessions', contentId: 'sessions-content' }, 
+    { buttonId: 'menu-chatbot', contentId: 'chatbot-content' }, 
   ];
 
   tabs.forEach(({ buttonId, contentId }) => {

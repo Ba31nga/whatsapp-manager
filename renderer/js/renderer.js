@@ -5,6 +5,8 @@ import { loadLogs } from './logs.js';
 import { setupTabListeners } from './tabs.js';
 import { setupQATab } from './qa-tab.js';
 import { initSessionsStatusTab } from './sessionsStatusTab.js';
+import './chatbot-manager.js';
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const api = window.api; 

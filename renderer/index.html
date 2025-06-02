@@ -24,7 +24,7 @@
         
         <div class="qr-code-wrapper">
           <div class="spinner"></div>
-          <img id="qrImage1" alt="QR Code 1 להתחברות" style="display:none;" />
+          <img id="qrImage1" style="display:none;" />
           <div class="checkmark" style="display:none;">✔️</div>
           <div class="overlay" style="display:none;"></div>
           <div id="loginStatus1" class="login-status" aria-live="polite"></div>
@@ -32,7 +32,7 @@
         
         <div class="qr-code-wrapper">
           <div class="spinner"></div>
-          <img id="qrImage2" alt="QR Code 2 להתחברות" style="display:none;" />
+          <img id="qrImage2" style="display:none;" />
           <div class="checkmark" style="display:none;">✔️</div>
           <div class="overlay" style="display:none;"></div>
           <div id="loginStatus2" class="login-status" aria-live="polite"></div>
@@ -40,7 +40,7 @@
         
         <div class="qr-code-wrapper">
           <div class="spinner"></div>
-          <img id="qrImage3" alt="QR Code 3 להתחברות" style="display:none;" />
+          <img id="qrImage3" style="display:none;" />
           <div class="checkmark" style="display:none;">✔️</div>
           <div class="overlay" style="display:none;"></div>
           <div id="loginStatus3" class="login-status" aria-live="polite"></div>
@@ -48,7 +48,7 @@
         
         <div class="qr-code-wrapper">
           <div class="spinner"></div>
-          <img id="qrImage4" alt="QR Code 4 להתחברות" style="display:none;" />
+          <img id="qrImage4" style="display:none;" />
           <div class="checkmark" style="display:none;">✔️</div>
           <div class="overlay" style="display:none;"></div>
           <div id="loginStatus4" class="login-status" aria-live="polite"></div>
@@ -98,6 +98,14 @@
             <path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2"/>
           </svg>
           מצב חיבורים
+        </a>
+
+        <a href="#" id="menu-chatbot" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.05 17.95l-1.414 1.414M18.364 17.95l-1.414-1.414M6.05 6.05L4.636 7.464M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+          </svg>
+          ניהול צ'אטבוט
         </a>
       </nav>
     </aside>
@@ -259,6 +267,39 @@
       </section>
     </main>
 
+    <main class="main-content" id="chatbot-content" style="display: none;">
+      <h1>ניהול צ'אטבוט</h1>
+      <p>צפייה וניהול שאלות פתוחות בצ'אט.</p>
+      
+
+      <section class="chatbot-container">
+
+        <!-- Sidebar with question categories -->
+        <aside class="chatbot-sidebar">
+          <h2>שאלות</h2>
+          <ul id="chatbotQuestionList">
+            <li data-status="unanswered" class="active">לא נענו</li>
+            <li data-status="in-progress">בטיפול</li>
+            <li data-status="needs-human">דורש מענה אנושי</li>
+          </ul>
+        </aside>
+
+        <!-- Chat display panel -->
+        <section class="chatbot-chat-panel">
+          <h2>שיחה</h2>
+          <div class="chat-window" id="chatWindow">
+            <p class="placeholder">בחר שאלה מהרשימה כדי להציג את השיחה</p>
+          </div>
+          <button id="markHumanResponse" class="human-button" style="display: none;">סמן כממתין למענה אנושי</button>
+        </section>
+
+      </section>
+
+      <div style="margin-bottom: 1rem;">
+        <button id="startChatbotMode" class="start-chatbot-button">הפעל מצב צ'אטבוט</button>
+        <span id="chatbotStatus" style="margin-right: 10px; font-weight: bold; color: green;"></span>
+      </div>
+    </main>
 
   </div>
 

@@ -5,6 +5,13 @@ const sessionStatuses = {};
 const { getAllQA, addQA, updateQA, deleteQA } = require('./googleSheetsService');
 const SessionManager = require('./sessionManager');
 const Logger = require('./logger');
+const {
+  startChatbotMode,
+  stopChatbotMode,
+  updateQuestionStatus,
+  getAllQuestions,
+} = require('./chatbot');
+
 
 let sessionManager;
 let mainWindow;
@@ -209,6 +216,35 @@ function startBackend(ipcMain, window) {
     }
   });
 
+  ipcMain.handle('chatbot:start', async () => {
+    try {
+      const result = await startChatbotMode(sessionManager, mainWindow);
+      return result;
+    } catch (err) {
+      console.error('[Backend] Error starting chatbot mode:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('chatbot:stop', async () => {
+    try {
+      const result = await stopChatbotMode(sessionManager);
+      return result;
+    } catch (err) {
+      console.error('[Backend] Error stopping chatbot mode:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('chatbot:update-question-status', (event, phone, status, assignedAgent) => {
+    const success = updateQuestionStatus(phone, status, assignedAgent);
+    return { success };
+  });
+
+  ipcMain.handle('chatbot:get-all-questions', () => {
+    const questions = getAllQuestions();
+    return { success: true, questions };
+  });
 }
 
 module.exports = { startBackend };

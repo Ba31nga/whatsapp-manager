@@ -98,4 +98,28 @@ contextBridge.exposeInMainWorld('api', {
     console.log('[Preload] askChatbot invoked with question:', question);
     return await ipcRenderer.invoke('chatbot:ask', question);
   },
+
+  startChatbot: async () => {
+    console.log('[Preload] startChatbot invoked');
+    return await ipcRenderer.invoke('chatbot:start');
+  },
+
+  // Stop chatbot mode
+  stopChatbot: async () => {
+    console.log('[Preload] stopChatbot invoked');
+    return await ipcRenderer.invoke('chatbot:stop');
+  },
+
+  // Update chatbot question status
+  updateChatbotQuestionStatus: async (phone, status, assignedAgent) => {
+    console.log(`[Preload] updateChatbotQuestionStatus invoked with phone=${phone}, status=${status}, assignedAgent=${assignedAgent}`);
+    return await ipcRenderer.invoke('chatbot:update-question-status', phone, status, assignedAgent);
+  },
+
+  // Get all chatbot questions
+  getAllChatbotQuestions: async () => {
+    console.log('[Preload] getAllChatbotQuestions invoked');
+    return await ipcRenderer.invoke('chatbot:get-all-questions');
+  },
+
 });
