@@ -1,17 +1,53 @@
+// SessionManager.js
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const EventEmitter = require('events');
+const fs = require('fs');
+const path = require('path');
 
 class SessionManager extends EventEmitter {
   constructor() {
     super();
     this.sessions = new Map();          // sessionId -> client
     this.sessionStatus = new Map();     // sessionId -> status string
+    this.sessionRoles = new Map();      // sessionId -> role ('bulking' or 'chatbot')
     this.retryCounts = new Map();       // sessionId -> number of reconnect attempts
     this.MAX_RETRIES = 5;
     this.RETRY_DELAY_MS = 5000;
+    this.rolesFilePath = path.resolve(__dirname, 'sessionRoles.json');
 
     console.log('[SessionManager] Initializing sessions...');
+    this.loadRolesFromFile();
     this.initSessions();
+  }
+
+  loadRolesFromFile() {
+    try {
+      if (fs.existsSync(this.rolesFilePath)) {
+        const data = fs.readFileSync(this.rolesFilePath, 'utf8');
+        const rolesObj = JSON.parse(data);
+        for (const [sessionId, role] of Object.entries(rolesObj)) {
+          this.sessionRoles.set(Number(sessionId), role);
+        }
+        console.log('[SessionManager] Loaded session roles from file.');
+      } else {
+        console.log('[SessionManager] No roles file found, starting fresh.');
+      }
+    } catch (err) {
+      console.error('[SessionManager] Error loading roles from file:', err);
+    }
+  }
+
+  saveRolesToFile() {
+    try {
+      const rolesObj = {};
+      for (const [sessionId, role] of this.sessionRoles.entries()) {
+        rolesObj[sessionId] = role;
+      }
+      fs.writeFileSync(this.rolesFilePath, JSON.stringify(rolesObj, null, 2), 'utf8');
+      console.log('[SessionManager] Saved session roles to file.');
+    } catch (err) {
+      console.error('[SessionManager] Error saving roles to file:', err);
+    }
   }
 
   async initSessions() {
@@ -19,6 +55,12 @@ class SessionManager extends EventEmitter {
       console.log(`[SessionManager] Creating session ${i}`);
       await this.delay(2000);
       this.createSession(i);
+
+      // Assign role: load from file if exists, else default
+      if (!this.sessionRoles.has(i)) {
+        const role = i <= 2 ? 'bulking' : 'chatbot';
+        this.setSessionRole(i, role);
+      }
     }
   }
 
@@ -31,10 +73,18 @@ class SessionManager extends EventEmitter {
     this.emit('status', sessionId, status);
   }
 
+  setSessionRole(sessionId, role) {
+    this.sessionRoles.set(sessionId, role);
+    this.saveRolesToFile();
+  }
+
+  getSessionRole(sessionId) {
+    return this.sessionRoles.get(sessionId) || null;
+  }
+
   createSession(sessionId) {
     console.log(`[SessionManager] createSession called for session ${sessionId}`);
 
-    // Reset retry count on new session creation
     this.retryCounts.set(sessionId, 0);
 
     const client = new Client({
@@ -57,7 +107,7 @@ class SessionManager extends EventEmitter {
     client.on('ready', () => {
       console.log(`[SessionManager] Client ready for session ${sessionId}`);
       this.setSessionStatus(sessionId, 'מחובר');
-      this.retryCounts.set(sessionId, 0);  // reset retries on successful ready
+      this.retryCounts.set(sessionId, 0);
     });
 
     client.on('authenticated', () => {
@@ -72,10 +122,8 @@ class SessionManager extends EventEmitter {
 
     client.on('disconnected', (reason) => {
       console.log(`[SessionManager] Disconnected session ${sessionId}, reason: ${reason}`);
-
       this.setSessionStatus(sessionId, 'מנותק, מנסה להתחבר מחדש');
 
-      // Increment retry count
       let retries = this.retryCounts.get(sessionId) || 0;
       retries++;
       this.retryCounts.set(sessionId, retries);
@@ -86,7 +134,6 @@ class SessionManager extends EventEmitter {
         return;
       }
 
-      // Delay before recreating session to avoid rapid reconnect loop
       setTimeout(async () => {
         try {
           await client.destroy();
@@ -114,6 +161,24 @@ class SessionManager extends EventEmitter {
       this.setSessionStatus(sessionId, 'שגיאה באתחול');
     });
   }
+
+  updateRole(sessionId, newRole) {
+    if (!this.sessions.has(sessionId)) {
+      throw new Error(`Session ${sessionId} does not exist.`);
+    }
+
+    const currentStatus = this.sessionStatus.get(sessionId);
+    if (currentStatus !== 'מחובר') {
+      throw new Error(`Cannot change role for session ${sessionId} because its status is "${currentStatus}". Only sessions with status "מחובר" can have their roles changed.`);
+    }
+
+    this.sessionRoles.set(sessionId, newRole);
+    this.saveRolesToFile();
+    this.emit('roleUpdated', sessionId, newRole);
+    console.log(`[SessionManager] Updated role for session ${sessionId} to ${newRole}`);
+  }
+
+
 
   normalizePhone(phoneRaw) {
     let phone = phoneRaw.replace(/\D/g, '');
@@ -183,27 +248,45 @@ class SessionManager extends EventEmitter {
   }
 
   async sendMessagesSplit(data, messageTemplate) {
-    const totalSessions = 4;
-    const chunkSize = Math.ceil(data.length / totalSessions);
+    // Filter sessions that are bulking and connected
+    const bulkingSessions = Array.from(this.sessions.keys()).filter(sessionId =>
+      this.sessionRoles.get(sessionId) === 'bulking' &&
+      this.sessionStatus.get(sessionId) === 'מחובר'
+    );
 
-    const chunks = [];
-    for (let i = 0; i < totalSessions; i++) {
-      chunks.push(data.slice(i * chunkSize, (i + 1) * chunkSize));
+    console.log(`[SessionManager] Found ${bulkingSessions.length} bulking sessions connected.`);
+    console.log(`[SessionManager] Sending total ${data.length} messages.`);
+
+    if (bulkingSessions.length === 0) {
+      throw new Error('אין לך מספיק סוכנים עם התפקיד : "שליחת הודעות"');
     }
 
-    const sendPromises = [];
+    // Calculate chunk size properly
+    const chunkSize = Math.ceil(data.length / bulkingSessions.length);
 
-    chunks.forEach((chunk, index) => {
-      const sessionId = index + 1;
-      if (chunk.length === 0) {
-        console.log(`[SessionManager] No data for session ${sessionId}, skipping send.`);
-        return;
-      }
-      sendPromises.push(this.sendMessages(sessionId, chunk, messageTemplate));
+    // Create chunks to split the data evenly across bulking sessions
+    const chunks = bulkingSessions.map((_, index) =>
+      data.slice(index * chunkSize, (index + 1) * chunkSize)
+    );
+
+    // Remove empty chunks (in case data.length < bulkingSessions.length)
+    const nonEmptyChunks = chunks.filter(chunk => chunk.length > 0);
+
+    if (nonEmptyChunks.length === 0) {
+      console.log('[SessionManager] No data to send after chunking.');
+      return;
+    }
+
+    // Send messages in parallel
+    const sendPromises = nonEmptyChunks.map((chunk, index) => {
+      const sessionId = bulkingSessions[index];
+      console.log(`[SessionManager] Sending ${chunk.length} messages via session ${sessionId}`);
+      return this.sendMessages(sessionId, chunk, messageTemplate);
     });
 
     await Promise.all(sendPromises);
   }
+
 
   async sendSingleMessage(sessionId, recipientData, messageTemplate) {
     const client = this.sessions.get(sessionId);
@@ -243,9 +326,8 @@ class SessionManager extends EventEmitter {
       throw e;
     }
   }
-
+  
   replacePlaceholders(template, dataRow) {
-    // create normalized key map from dataRow:
     const normalizedMap = {};
     for (const key in dataRow) {
       const normalizedKey = key.replace(/[\s_]/g, '').toLowerCase();
@@ -255,11 +337,9 @@ class SessionManager extends EventEmitter {
     return template.replace(/#(?:\{([\p{L}\w\s_]+)\}|([\p{L}\w_]+))/gu, (match, p1, p2) => {
       const keyRaw = p1 || p2;
       const normalizedKey = keyRaw.replace(/[\s_]/g, '').toLowerCase();
-
       return normalizedMap[normalizedKey] !== undefined ? normalizedMap[normalizedKey] : match;
     });
   }
-
 }
 
 module.exports = SessionManager;

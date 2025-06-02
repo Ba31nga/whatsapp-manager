@@ -54,11 +54,13 @@ function updatePreview() {
   messagePreview.textContent = previewText;
 }
 
-
-
 /**
  * Setup send button to send split messages via API.
- * @param {Object} api - API interface with method requestSendMessages(messagesArray)
+ * Validates that at least one session has role "bulking" before sending.
+ * Distributes messages only to sessions with "bulking" role evenly.
+ * @param {Object} api - API interface with methods:
+ *   - requestSendMessages(messagesArray)
+ *   - requestSessionRole(sessionId)
  */
 export function setupSendButton(api) {
   sendBtn.addEventListener('click', async () => {
@@ -80,11 +82,35 @@ export function setupSendButton(api) {
     }
 
     const typingSpeed = typingSpeedSelect?.value || 'average';
-    const chunks = chunkArray(parsedData, 4);
 
-    const messagesToSend = chunks.map((chunk, idx) => ({
-      sessionId: idx + 1,
-      data: chunk,
+    // Determine which sessions have bulking role
+    let roles;
+    try {
+      roles = await Promise.all(
+        [1, 2, 3, 4].map(sessionId => api.requestSessionRole(sessionId))
+      );
+    } catch (err) {
+      showToast('שגיאה בקבלת תפקידים: ' + err.message, 'error');
+      return;
+    }
+
+    // Filter sessions with bulking role
+    const bulkingSessions = roles
+      .map((r, idx) => ({ role: r?.role, sessionId: idx + 1 }))
+      .filter(r => r.role === 'bulking');
+
+    if (bulkingSessions.length === 0) {
+      showToast('אין לך מספיק סוכנים עם התפקיד : "שליחת הודעות"', 'error');
+      return;
+    }
+
+    // Distribute parsedData evenly among bulking sessions
+    const chunks = chunkArray(parsedData, bulkingSessions.length);
+
+    // Prepare messages array
+    const messagesToSend = bulkingSessions.map((session, idx) => ({
+      sessionId: session.sessionId,
+      data: chunks[idx],
       messageTemplate: template,
       typingSpeed,
     }));
@@ -95,6 +121,7 @@ export function setupSendButton(api) {
     }
 
     try {
+      // Proceed to send messages
       const result = await api.requestSendMessages(messagesToSend);
       if (result.success) {
         showToast('ההודעות נשלחו בהצלחה', 'success');

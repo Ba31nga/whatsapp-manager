@@ -1,3 +1,5 @@
+// File: preload.js
+
 const { contextBridge, ipcRenderer } = require('electron');
 
 console.log('[Preload] preload.js loaded, setting up api');
@@ -78,6 +80,17 @@ contextBridge.exposeInMainWorld('api', {
   requestSessionStatus: async (sessionId) => {
     console.log(`[Preload] requestSessionStatus invoked for sessionId=${sessionId}`);
     return await ipcRenderer.invoke('session:get-status', sessionId);
+  },
+
+  // Request current session role from backend
+  requestSessionRole: async (sessionId) => {
+    console.log(`[Preload] requestSessionRole invoked for sessionId=${sessionId}`);
+    return await ipcRenderer.invoke('session:get-role', sessionId);
+  },
+
+  updateSessionRole: async (sessionId, newRole) => {
+    console.log(`[Preload] updateSessionRole invoked for sessionId=${sessionId} with newRole=${newRole}`);
+    return await ipcRenderer.invoke('session:update-role', sessionId, newRole);
   },
 
   // Ask chatbot a question

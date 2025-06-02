@@ -1,3 +1,5 @@
+// File: backend.js (or whatever your backend entry filename is)
+
 const { getBestAnswer } = require('./aiChatService');
 const sessionStatuses = {};
 const { getAllQA, addQA, updateQA, deleteQA } = require('./googleSheetsService');
@@ -22,7 +24,6 @@ function setSessionStatus(sessionId, status) {
 function getSessionStatus(sessionId) {
   return sessionStatuses[sessionId] || 'available';
 }
-
 
 // Typing speeds in chars per second for simulation
 const typingSpeeds = {
@@ -75,11 +76,43 @@ function startBackend(ipcMain, window) {
     }
   });
 
+  ipcMain.handle('session:update-role', async (event, sessionId, newRole) => {
+    try {
+      sessionManager.updateRole(sessionId, newRole);
+      console.log(`[Backend] Updated role for session ${sessionId} to ${newRole}`);
+      return { success: true };
+    } catch (err) {
+      console.error(`[Backend] Error updating role for session ${sessionId}:`, err);
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('session:get-role', async (event, sessionId) => {
+    try {
+      const role = sessionManager.getSessionRole(sessionId);
+      if (!role) {
+        return { success: false, error: 'Session role not found' };
+      }
+      return { success: true, role };
+    } catch (err) {
+      console.error(`[Backend] Error getting role for session ${sessionId}:`, err);
+      return { success: false, error: err.message };
+    }
+  });
+
   ipcMain.handle('send-messages', async (event, messages) => {
     console.log('[Backend] IPC send-messages handler called with messages:', messages);
     try {
       const sessionPromises = messages.map(async (msgBatch) => {
         const sessionId = msgBatch.sessionId;
+
+        // Check session role before sending
+        const role = sessionManager.getSessionRole(sessionId);
+        if (role !== 'bulking') {
+          console.log(`[Backend] Skipping session ${sessionId} because its role is '${role}', not 'bulking'`);
+          return;
+        }
+
         console.log(`[Backend] Sending messages for session ${sessionId} with ${msgBatch.data.length} entries`);
 
         const typingSpeed = msgBatch.typingSpeed || 'average';
@@ -175,7 +208,6 @@ function startBackend(ipcMain, window) {
       return { success: false, error: 'שגיאה פנימית' };
     }
   });
-
 
 }
 

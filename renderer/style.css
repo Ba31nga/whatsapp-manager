@@ -674,6 +674,43 @@ body.login-active .app-container {
    Additional styling for card layout + refresh button
    =========================== */
 
+/* Styled select for main content */
+.main-content select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  background-color: #1e1f22;
+  color: #eee;
+  box-shadow: inset 0 0 6px #00000080;
+  appearance: none; /* remove default arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  direction: rtl;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  background-image:
+    url("data:image/svg+xml;charset=US-ASCII,%3csvg width='16' height='16' fill='none' stroke='%23eee' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+  background-size: 16px 16px;
+}
+
+/* On focus */
+.main-content select:focus {
+  outline: 2px solid #4ea1ff;
+  background-color: #222327;
+  box-shadow: inset 0 0 8px #007acc;
+}
+
+/* Optional: hover effect */
+.main-content select:hover {
+  background-color: #222327;
+}
+
+
 /* Main container for the sessions cards */
 #sessions-content {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
