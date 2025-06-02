@@ -142,19 +142,16 @@ export function setupSendButton(api) {
  * @returns {Array<Array>}
  */
 function chunkArray(array, parts) {
-  if (parts <= 0) return [array];
+  const result = Array.from({ length: parts }, () => []);
 
-  const result = [];
-  const chunkSize = Math.ceil(array.length / parts);
-
-  for (let i = 0; i < parts; i++) {
-    const start = i * chunkSize;
-    const end = Math.min(start + chunkSize, array.length);
-    result.push(array.slice(start, end));
-  }
+  array.forEach((item, index) => {
+    const chunkIndex = index % parts;
+    result[chunkIndex].push(item);
+  });
 
   return result;
 }
+
 
 export function setupClearButton() {
   const clearBtn = document.getElementById('clearTable');
